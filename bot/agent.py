@@ -13,10 +13,10 @@ Produces a Telegram message like:
 • Infosec
 
 📰 Today’s Cybersecurity Headlines:
-• 🚨 [CVE‑2025‑25257] Critical RCE vulnerability in **Fortinet FortiWeb** requires urgent patching.
-• ⚠️ **Wing FTP Server** exploit in the wild after recent disclosure.
-• 🧠 **Security Affairs** releases Issue #53 of its **Malware Newsletter**.
-• 🌍 **International Newsletter #532** published by **Pierluigi Paganini** (Security Affairs).
+• 🚨 [CVE‑2025‑25257] Critical RCE vulnerability in Fortinet FortiWeb requires urgent patching.
+• ⚠️ Wing FTP Server exploit in the wild after recent disclosure.
+• 🧠 Security Affairs releases Issue #53 of its Malware Newsletter.
+• 🌍 International Newsletter #532 published by Pierluigi Paganini (Security Affairs).
 """
 
 from __future__ import annotations
@@ -48,8 +48,7 @@ def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
         "Guidelines:\n"
         "• Start each bullet with an appropriate emoji (e.g., 🚨 critical vuln, ⚠️ exploit, 🧠 analyst report, 🌍 global news).\n"
         "• Highlight CVE IDs in square brackets like [CVE-2025-1234].\n"
-        "• Bold key product or source names by surrounding with **double asterisks**.\n"
-        "• No hashtags, no links, no markdown codes other than **bold** and [CVE-…].\n\n"
+        "• No hashtags, no links, no markdown codes other than [CVE-…].\n\n"
         "Headlines:\n- " + "\n- ".join(headlines)
     )
     resp = model.generate_content(prompt)
