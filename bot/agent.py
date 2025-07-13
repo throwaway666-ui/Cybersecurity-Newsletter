@@ -13,6 +13,7 @@ Produces a Telegram message like:
 • Infosec
 
 📰 Today’s Cybersecurity Headlines:
+
 • 🚨 [CVE‑2025‑25257] Critical RCE vulnerability in Fortinet FortiWeb requires urgent patching.
 • ⚠️ Wing FTP Server exploit in the wild after recent disclosure.
 • 🧠 Security Affairs releases Issue #53 of its Malware Newsletter.
