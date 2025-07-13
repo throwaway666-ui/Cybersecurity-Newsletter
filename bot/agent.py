@@ -1,84 +1,106 @@
 """
 bot/agent.py
 ────────────
-Daily workflow:
-1. Get today's trending Twitter/X topics via twitterapi.io      (fetch_top_terms)
-2. Pull today's headlines from three RSS feeds                  (rss.today_items)
-3. Ask Gemini‑Flash‑2.5 to summarise the RSS headlines
-4. Post both sections to a Telegram channel
+Produces a Telegram message like:
 
-Secrets required (same as before):
-• TG_TOKEN        – Telegram BotFather token
-• TG_CHAT_ID      – Channel ID (@user or -100…)
-• GENAI_API_KEY   – Google AI key
-• TWITTERAPI_KEY  – twitterapi.io key
+🕵‍♂️ Cybersecurity Digest — 13 Jul 2025
+
+📈 Trending Topics on Twitter:
+• Ransomware
+• Phishing
+• Malware
+• Zero‑day
+• Infosec
+
+📰 Today’s Cybersecurity Headlines:
+• 🚨 [CVE‑2025‑25257] Critical RCE vulnerability in **Fortinet FortiWeb** requires urgent patching.
+• ⚠️ **Wing FTP Server** exploit in the wild after recent disclosure.
+• 🧠 **Security Affairs** releases Issue #53 of its **Malware Newsletter**.
+• 🌍 **International Newsletter #532** published by **Pierluigi Paganini** (Security Affairs).
 """
 
 from __future__ import annotations
-import os, datetime, requests, sys, traceback, time
+import os, datetime, requests, sys, traceback, time, re
 import google.generativeai as genai
-from twitter import fetch_top_terms
-from rss import today_items                    # ← NEW helper
 
-# ── Environment variables ----------------------------------------------------
+from twitter import fetch_top_terms
+from rss import today_items
+
+# ── Secrets / env vars -------------------------------------------------------
 TG_TOKEN      = os.environ["TG_TOKEN"]
 TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
-def make_rss_summary(max_bullets: int = 5) -> str:
-    """Summarise today's RSS headlines into ≤ max_bullets bullets."""
-    headlines = today_items(max_items=25)  # give Gemini more context than bullets
+# ── Helpers ──────────────────────────────────────────────────────────────────
+def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
+    """Ask Gemini Flash 2.5 to craft emoji‑enhanced news bullets."""
     if not headlines:
-        return "No fresh cybersecurity news items were published so far today."
+        return "• No fresh cybersecurity headlines found in the last 24 h."
 
     genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
     prompt = (
         "You are a cybersecurity journalist.\n"
-        "Summarise the following headlines published today into concise bullets (≤25 words each, max 5 bullets).\n"
+        f"Create up to {bullets} concise, punchy bullets (~25 words each) summarizing these headlines.\n"
+        "Guidelines:\n"
+        "• Start each bullet with an appropriate emoji (e.g., 🚨 critical vuln, ⚠️ exploit, 🧠 analyst report, 🌍 global news).\n"
+        "• Highlight CVE IDs in square brackets like [CVE-2025-1234].\n"
+        "• Bold key product or source names by surrounding with **double asterisks**.\n"
+        "• No hashtags, no links, no markdown codes other than **bold** and [CVE-…].\n\n"
         "Headlines:\n- " + "\n- ".join(headlines)
     )
     resp = model.generate_content(prompt)
-    bullets = [line for line in resp.text.strip().splitlines() if line.strip()]
-    return "\n".join(bullets[:max_bullets])
+    bullets_out = [ln.strip() for ln in resp.text.strip().splitlines() if ln.strip()]
+    return "\n".join(bullets_out[:bullets])
 
 
-def send_to_telegram(message: str) -> None:
-    """Post message to Telegram; print API response for debugging."""
+def send_to_telegram(text: str) -> None:
+    """Send plain‑text message to Telegram."""
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
     payload = {
         "chat_id": TG_CHAT_ID,
-        "text": message,
-        # "parse_mode": "Markdown",  # enable later if message is Markdown‑safe
+        "text": text,
+        # parse_mode intentionally omitted to avoid Markdown pitfalls
     }
     r = requests.post(url, json=payload, timeout=15)
-    print("Telegram API response:", r.status_code, r.text[:300])
+    print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
 
+def title_case(term: str) -> str:
+    """Beautify simple keywords: cve stays CVE, others capitalised."""
+    if term.lower().startswith("cve"):
+        return term.upper()
+    return term.capitalize()
+
+
+# ── Main routine ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
-        # ── Twitter section ────────────────────────────────────────────────
-        twitter_topics = fetch_top_terms(count=5)
-        twitter_block = "Trending Twitter topics (today):\n" + "\n".join(f"• {t}" for t in twitter_topics)
+        # 1) Twitter trending topics
+        twitter_terms = fetch_top_terms(count=5)
+        twitter_terms = [title_case(t) for t in twitter_terms]
+        twitter_block = "📈 Trending Topics on Twitter:\n" + "\n".join(f"• {t}" for t in twitter_terms)
 
-        # ── RSS section ────────────────────────────────────────────────────
-        rss_block = "Today’s cybersecurity news highlights:\n" + make_rss_summary(max_bullets=5)
+        # 2) RSS → Gemini summary
+        headlines = today_items(max_items=25)   # context for Gemini
+        news_block = "📰 Today’s Cybersecurity Headlines:\n" + summarise_rss(headlines, bullets=5)
 
-        # ── Final digest ───────────────────────────────────────────────────
-        today_str = datetime.date.today().strftime("%d %b %Y")
-        digest = f"🕵️‍♂️ Cybersecurity digest — {today_str}\n\n{twitter_block}\n\n{rss_block}"
+        # 3) Assemble final digest
+        today_str = datetime.date.today().strftime("%d %b %Y")
+        digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{twitter_block}\n\n{news_block}"
 
-        # Log and send
-        print("===== Digest Output =====")
+        # Log & send
+        print("===== Final Digest =====")
         print(digest)
-        print("================================================================")
+        print("====================================================")
+
         send_to_telegram(digest)
-        print(f"✅  Digest sent. Runtime: {time.time() - t0:.1f}s")
+        print(f"✅ Sent!  Runtime: {time.time() - t0:.1f}s")
 
     except Exception:
         traceback.print_exc()
