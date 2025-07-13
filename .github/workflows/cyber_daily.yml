@@ -4,7 +4,7 @@ name: Cybersecurity Daily Digest
 on:
   schedule:
     # 09:15 IST daily → 03:45 UTC (GitHub uses UTC)
-    - cron: '45 3 * * *'
+    - cron: '42 3 * * *'
   workflow_dispatch:   # manual “Run workflow” button
 
 # ── Job definition ──────────────────────────────────────────────────────────
