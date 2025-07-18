@@ -111,7 +111,6 @@ if __name__ == "__main__":
               {''.join(f'<li style="margin-bottom:10px;">{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
               </ul>
 
-              <p style="font-size:13px; color:#888888; text-align:center; margin-top:40px;">Sent automatically via GitHub ✨</p>
             </div>
           </body>
         </html>
