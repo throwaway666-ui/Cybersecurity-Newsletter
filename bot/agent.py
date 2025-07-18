@@ -26,7 +26,7 @@ import google.generativeai as genai
 
 from twitter import fetch_top_terms
 from rss import today_items
-from email import send_html_email  # custom Gmail sender
+from send_email import send_html_email  # custom Gmail sender
 
 # ── Secrets / env vars ─────────────────────────────────────────────
 TG_TOKEN      = os.environ["TG_TOKEN"]
