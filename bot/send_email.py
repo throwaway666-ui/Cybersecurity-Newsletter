@@ -16,8 +16,8 @@ def send_html_email(subject: str, html_content: str):
 
     service = build("gmail", "v1", credentials=creds)
     message = MIMEText(html_content, "html")
-    message["to"] = os.environ["GMAIL_TO"]
-    message["from"] = os.environ["GMAIL_FROM"]
+    message["to"] = os.environ["GMAIL_SENDER"]
+    message["from"] = os.environ["GMAIL_SENDER"]
     message["subject"] = subject
 
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
