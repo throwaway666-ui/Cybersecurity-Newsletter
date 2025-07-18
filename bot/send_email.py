@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 
 
 def send_html_email(subject: str, html_content: str):
-    # Load credentials from env vars
+    # Authenticate using environment secrets
     creds = Credentials(
         token=None,
         refresh_token=os.environ["GMAIL_REFRESH_TOKEN"],
@@ -17,26 +17,25 @@ def send_html_email(subject: str, html_content: str):
         scopes=["https://www.googleapis.com/auth/gmail.send"]
     )
 
-    # Setup Gmail service
     service = build("gmail", "v1", credentials=creds)
 
-    # Email parameters
+    # Extract recipients
     sender = os.environ["GMAIL_SENDER"]
-    recipient = os.environ["GMAIL_RECIPIENT"]
+    recipients = os.environ["GMAIL_RECIPIENTS"].split(",")
+    bcc_list = os.environ.get("GMAIL_BCC_RECIPIENTS", "").split(",") if "GMAIL_BCC_RECIPIENTS" in os.environ else []
 
-    # Construct HTML email
+    # Build email message
     message = MIMEMultipart("alternative")
-    message["To"] = recipient
-    message["From"] = sender
     message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = ", ".join(recipients)
+    if bcc_list:
+        message["Bcc"] = ", ".join(bcc_list)
 
-    mime_text = MIMEText(html_content, "html")
-    message.attach(mime_text)
+    message.attach(MIMEText(html_content, "html"))
 
-    # Encode message
+    # Encode and send
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
     body = {"raw": raw_message}
-
-    # Send email
-    response = service.users().messages().send(userId="me", body=body).execute()
-    print(f"📧 Gmail sent to {recipient} — Message ID: {response['id']}")
+    result = service.users().messages().send(userId="me", body=body).execute()
+    print("📧 Gmail response:", result["id"])
