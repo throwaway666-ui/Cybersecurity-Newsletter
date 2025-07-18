@@ -1,6 +1,7 @@
-# --- Python libraries the workflow will install
 requests==2.32.3
-google-generativeai==0.5.2   # Gemini Flash 2.5 client
+google-generativeai==0.5.2
 python-dateutil==2.9.0
-feedparser==6.0.11      # ← NEW
-
+feedparser==6.0.11
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+google-api-python-client==2.126.0
