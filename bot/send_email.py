@@ -1,13 +1,12 @@
 import base64
-import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-
+import os
 
 def send_html_email(subject: str, html_content: str):
-    # Authenticate using environment secrets
+    # Setup credentials from environment variables
     creds = Credentials(
         token=None,
         refresh_token=os.environ["GMAIL_REFRESH_TOKEN"],
@@ -17,25 +16,29 @@ def send_html_email(subject: str, html_content: str):
         scopes=["https://www.googleapis.com/auth/gmail.send"]
     )
 
+    # Initialize Gmail API
     service = build("gmail", "v1", credentials=creds)
 
-    # Extract recipients
     sender = os.environ["GMAIL_SENDER"]
-    recipients = os.environ["GMAIL_RECIPIENTS"].split(",")
-    bcc_list = os.environ.get("GMAIL_BCC_RECIPIENTS", "").split(",") if "GMAIL_BCC_RECIPIENTS" in os.environ else []
+    bcc_recipients = [
+        email.strip()
+        for email in os.environ["GMAIL_RECIPIENTS"].split(",")
+        if email.strip()
+    ]
 
-    # Build email message
+    # Create a MIME email message
     message = MIMEMultipart("alternative")
     message["Subject"] = subject
     message["From"] = sender
-    message["To"] = ", ".join(recipients)
-    if bcc_list:
-        message["Bcc"] = ", ".join(bcc_list)
+    message["To"] = sender  # visible 'To:' line
+    message["Bcc"] = ", ".join(bcc_recipients)  # actual recipients hidden
 
-    message.attach(MIMEText(html_content, "html"))
+    # Attach the HTML content
+    part_html = MIMEText(html_content, "html")
+    message.attach(part_html)
 
     # Encode and send
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    body = {"raw": raw_message}
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    body = {"raw": raw}
     result = service.users().messages().send(userId="me", body=body).execute()
     print("📧 Gmail response:", result["id"])
