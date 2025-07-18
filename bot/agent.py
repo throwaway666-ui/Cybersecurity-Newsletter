@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
               <h3 style="color:#005bbb; font-size:18px; margin-top:30px; margin-bottom:10px;">📰 Today’s Cybersecurity Headlines</h3>
               <ul style="padding-left:20px; color:#222222; font-size:16px;">
-                {''.join(f'<li style="margin-bottom:10px;">{line[2:]}</li>' for line in news_block.splitlines() if line.startswith("• "))}
+              {''.join(f'<li style="margin-bottom:10px;">{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
               </ul>
 
               <p style="font-size:13px; color:#888888; text-align:center; margin-top:40px;">Sent automatically via GitHub ✨</p>
