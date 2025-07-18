@@ -1,7 +1,7 @@
 """
 bot/agent.py
 ────────────
-Produces a Telegram message like:
+Produces a Telegram + Gmail message like:
 
 🕵‍♂️ Cybersecurity Digest — 13 Jul 2025
 
@@ -26,15 +26,16 @@ import google.generativeai as genai
 
 from twitter import fetch_top_terms
 from rss import today_items
+from email import send_html_email  # custom Gmail sender
 
-# ── Secrets / env vars -------------------------------------------------------
+# ── Secrets / env vars ─────────────────────────────────────────────
 TG_TOKEN      = os.environ["TG_TOKEN"]
 TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
-# ----------------------------------------------------------------------------
+# GMAIL secrets are handled inside email.py via env vars
+# ───────────────────────────────────────────────────────────────────
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
 def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
     """Ask Gemini Flash 2.5 to craft emoji‑enhanced news bullets."""
     if not headlines:
@@ -63,7 +64,6 @@ def send_to_telegram(text: str) -> None:
     payload = {
         "chat_id": TG_CHAT_ID,
         "text": text,
-        # parse_mode intentionally omitted to avoid Markdown pitfalls
     }
     r = requests.post(url, json=payload, timeout=15)
     print("Telegram API response:", r.status_code, r.text[:200])
@@ -77,7 +77,7 @@ def title_case(term: str) -> str:
     return term.capitalize()
 
 
-# ── Main routine ─────────────────────────────────────────────────────────────
+# ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
@@ -87,20 +87,33 @@ if __name__ == "__main__":
         twitter_block = "📈 Trending Topics on Twitter:\n" + "\n".join(f"• {t}" for t in twitter_terms)
 
         # 2) RSS → Gemini summary
-        headlines = today_items(max_items=25)   # context for Gemini
+        headlines = today_items(max_items=25)
         news_block = "📰 Today’s Cybersecurity Headlines:\n" + summarise_rss(headlines, bullets=5)
 
-        # 3) Assemble final digest
+        # 3) Assemble final digest (plain-text)
         today_str = datetime.date.today().strftime("%d %b %Y")
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{twitter_block}\n\n{news_block}"
 
-        # Log & send
-        print("===== Final Digest =====")
-        print(digest)
-        print("====================================================")
+        # 4) Convert to HTML format
+        html_digest = (
+            f"<h2>🕵️ Cybersecurity Digest — {today_str}</h2>"
+            f"<h3>📈 Trending Topics on Twitter:</h3><ul>"
+            + "".join(f"<li>{t}</li>" for t in twitter_terms)
+            + "</ul><h3>📰 Today’s Cybersecurity Headlines:</h3><ul>"
+            + "".join(f"<li>{line[2:]}</li>" for line in news_block.splitlines() if line.startswith("• "))
+            + "</ul>"
+        )
 
+        # 5) Log output
+        print("===== Final Digest (plain-text) =====")
+        print(digest)
+        print("=====================================")
+
+        # 6) Send to Telegram and Gmail
         send_to_telegram(digest)
-        print(f"✅ Sent!  Runtime: {time.time() - t0:.1f}s")
+        send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
+
+        print(f"✅ Sent to Telegram and Gmail!  Runtime: {time.time() - t0:.1f}s")
 
     except Exception:
         traceback.print_exc()
