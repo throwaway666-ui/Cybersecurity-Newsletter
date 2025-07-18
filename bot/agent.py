@@ -95,14 +95,28 @@ if __name__ == "__main__":
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{twitter_block}\n\n{news_block}"
 
         # 4) Convert to HTML format
-        html_digest = (
-            f"<h2>🕵️ Cybersecurity Digest — {today_str}</h2>"
-            f"<h3>📈 Trending Topics on Twitter:</h3><ul>"
-            + "".join(f"<li>{t}</li>" for t in twitter_terms)
-            + "</ul><h3>📰 Today’s Cybersecurity Headlines:</h3><ul>"
-            + "".join(f"<li>{line[2:]}</li>" for line in news_block.splitlines() if line.startswith("• "))
-            + "</ul>"
-        )
+       html_digest = f"""
+<html>
+  <body style="font-family:Segoe UI,Roboto,Arial,sans-serif; background:#f9f9f9; padding:20px;">
+    <div style="max-width:600px; margin:auto; background:white; border-radius:10px; padding:30px; box-shadow:0 0 10px rgba(0,0,0,0.05);">
+      <h2 style="color:#333333; font-size:22px; margin-top:0;">🕵️ Cybersecurity Digest — {today_str}</h2>
+      
+      <h3 style="color:#005bbb; font-size:18px; margin-bottom:10px;">📈 Trending Topics on Twitter</h3>
+      <ul style="padding-left:20px; color:#222222; font-size:16px;">
+        {''.join(f'<li style="margin-bottom:6px;">{t}</li>' for t in twitter_terms)}
+      </ul>
+
+      <h3 style="color:#005bbb; font-size:18px; margin-top:30px; margin-bottom:10px;">📰 Today’s Cybersecurity Headlines</h3>
+      <ul style="padding-left:20px; color:#222222; font-size:16px;">
+        {''.join(f'<li style="margin-bottom:10px;">{line}</li>' for line in news_block.splitlines() if line.strip())}
+      </ul>
+
+      <p style="font-size:13px; color:#888888; text-align:center; margin-top:40px;">Sent automatically via GitHub ✨</p>
+    </div>
+  </body>
+</html>
+"""
+
 
         # 5) Log output
         print("===== Final Digest (plain-text) =====")
