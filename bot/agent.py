@@ -96,20 +96,34 @@ if __name__ == "__main__":
 
         # 4) Convert to HTML format
         html_digest = f"""
-        <html>
-          <body style="font-family:Segoe UI,Roboto,Arial,sans-serif; background:#f9f9f9; padding:20px;">
-            <div style="max-width:600px; margin:auto; background:white; border-radius:10px; padding:30px; box-shadow:0 0 10px rgba(0,0,0,0.05);">
-              <h2 style="color:#333333; font-size:22px; margin-top:0;">🕵️ Cybersecurity Digest — {today_str}</h2>
+        html_digest = f"""
+    <html>
+      <body style="margin:0; padding:0; background:#f4f6f8; font-family:Segoe UI, Roboto, Arial, sans-serif;">
+        <div style="max-width:620px; margin:30px auto; background:#ffffff; border-radius:12px; padding:32px 28px; box-shadow:0 4px 12px rgba(0,0,0,0.07);">
+          
+          <h2 style="margin-top:0; font-size:24px; color:#1a1a1a; border-bottom:1px solid #e0e0e0; padding-bottom:12px;">
+            🕵️ Cybersecurity Digest — {today_str}
+          </h2>
 
-              <h3 style="color:#005bbb; font-size:18px; margin-bottom:10px;">📈 Trending Topics on Twitter</h3>
-              <ul style="padding-left:20px; color:#222222; font-size:16px;">
-                {''.join(f'<li style="margin-bottom:6px;">{t}</li>' for t in twitter_terms)}
-              </ul>
+          <h3 style="color:#0066cc; font-size:18px; margin:24px 0 12px;">📈 Trending Topics on Twitter</h3>
+          <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.6;">
+            {''.join(f'<li>{t}</li>' for t in twitter_terms)}
+          </ul>
 
-              <h3 style="color:#005bbb; font-size:18px; margin-top:30px; margin-bottom:10px;">📰 Today’s Cybersecurity Headlines</h3>
-              <ul style="padding-left:20px; color:#222222; font-size:16px;">
-              {''.join(f'<li style="margin-bottom:10px;">{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
-              </ul>
+          <h3 style="color:#0066cc; font-size:18px; margin:28px 0 12px;">📰 Today’s Cybersecurity Headlines</h3>
+          <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.75;">
+            {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
+          </ul>
+
+        </div>
+
+        <div style="max-width:620px; margin:0 auto; text-align:center; padding:12px 0 30px; font-size:12px; color:#888888;">
+          Stay secure. This digest was sent to you by your automated cybersecurity agent.
+        </div>
+      </body>
+    </html>
+"""
+
 
             </div>
           </body>
