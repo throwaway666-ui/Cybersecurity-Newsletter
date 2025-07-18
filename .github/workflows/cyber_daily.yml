@@ -34,5 +34,5 @@ jobs:
           GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
           GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
           GMAIL_RECIPIENTS: ${{ secrets.GMAIL_RECIPIENTS }}
-          GMAIL_BCC_RECIPIENTS: ${{ secrets.GMAIL_BCC_RECEPIENTS }}
+          
         run: python bot/agent.py
