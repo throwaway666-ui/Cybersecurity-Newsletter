@@ -1,25 +1,3 @@
-"""
-bot/agent.py
-────────────
-Produces a Telegram + Gmail message like:
-
-🕵‍♂️ Cybersecurity Digest — 13 Jul 2025
-
-📈 Trending Topics on Twitter:
-• Ransomware
-• Phishing
-• Malware
-• Zero‑day
-• Infosec
-
-📰 Today’s Cybersecurity Headlines:
-
-• 🚨 [CVE‑2025‑25257] Critical RCE vulnerability in Fortinet FortiWeb requires urgent patching.
-• ⚠️ Wing FTP Server exploit in the wild after recent disclosure.
-• 🧠 Security Affairs releases Issue #53 of its Malware Newsletter.
-• 🌍 International Newsletter #532 published by Pierluigi Paganini (Security Affairs).
-"""
-
 from __future__ import annotations
 import os, datetime, requests, sys, traceback, time, re
 import google.generativeai as genai
@@ -35,11 +13,10 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
 
-
 def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
     """Ask Gemini Flash 2.5 to craft emoji‑enhanced news bullets."""
     if not headlines:
-        return "• No fresh cybersecurity headlines found in the last 24 h."
+        return "• No fresh cybersecurity headlines found in the last 24h."
 
     genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash-latest")
@@ -57,7 +34,6 @@ def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
     bullets_out = [ln.strip() for ln in resp.text.strip().splitlines() if ln.strip()]
     return "\n".join(bullets_out[:bullets])
 
-
 def send_to_telegram(text: str) -> None:
     """Send plain‑text message to Telegram."""
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
@@ -69,13 +45,11 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-
 def title_case(term: str) -> str:
     """Beautify simple keywords: cve stays CVE, others capitalised."""
     if term.lower().startswith("cve"):
         return term.upper()
     return term.capitalize()
-
 
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -96,35 +70,28 @@ if __name__ == "__main__":
 
         # 4) Convert to HTML format
         html_digest = f"""
-        html_digest = f"""
-    <html>
-      <body style="margin:0; padding:0; background:#f4f6f8; font-family:Segoe UI, Roboto, Arial, sans-serif;">
-        <div style="max-width:620px; margin:30px auto; background:#ffffff; border-radius:12px; padding:32px 28px; box-shadow:0 4px 12px rgba(0,0,0,0.07);">
-          
-          <h2 style="margin-top:0; font-size:24px; color:#1a1a1a; border-bottom:1px solid #e0e0e0; padding-bottom:12px;">
-            🕵️ Cybersecurity Digest — {today_str}
-          </h2>
+        <html>
+          <body style="margin:0; padding:0; background:#f4f6f8; font-family:Segoe UI, Roboto, Arial, sans-serif;">
+            <div style="max-width:620px; margin:30px auto; background:#ffffff; border-radius:12px; padding:32px 28px; box-shadow:0 4px 12px rgba(0,0,0,0.07);">
+              
+              <h2 style="margin-top:0; font-size:24px; color:#1a1a1a; border-bottom:1px solid #e0e0e0; padding-bottom:12px;">
+                🕵️ Cybersecurity Digest — {today_str}
+              </h2>
 
-          <h3 style="color:#0066cc; font-size:18px; margin:24px 0 12px;">📈 Trending Topics on Twitter</h3>
-          <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.6;">
-            {''.join(f'<li>{t}</li>' for t in twitter_terms)}
-          </ul>
+              <h3 style="color:#0066cc; font-size:18px; margin:24px 0 12px;">📈 Trending Topics on Twitter</h3>
+              <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.6;">
+                {''.join(f'<li>{t}</li>' for t in twitter_terms)}
+              </ul>
 
-          <h3 style="color:#0066cc; font-size:18px; margin:28px 0 12px;">📰 Today’s Cybersecurity Headlines</h3>
-          <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.75;">
-            {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
-          </ul>
+              <h3 style="color:#0066cc; font-size:18px; margin:28px 0 12px;">📰 Today’s Cybersecurity Headlines</h3>
+              <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.75;">
+                {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
+              </ul>
 
-        </div>
+            </div>
 
-        <div style="max-width:620px; margin:0 auto; text-align:center; padding:12px 0 30px; font-size:12px; color:#888888;">
-          Stay secure. This digest was sent to you by your automated cybersecurity agent.
-        </div>
-      </body>
-    </html>
-"""
-
-
+            <div style="max-width:620px; margin:0 auto; text-align:center; padding:12px 0 30px; font-size:12px; color:#888888;">
+              Stay secure. This digest was sent to you by your automated cybersecurity agent.
             </div>
           </body>
         </html>
