@@ -95,7 +95,7 @@ if __name__ == "__main__":
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{twitter_block}\n\n{news_block}"
 
         # 4) Convert to HTML format
-               html_digest = f"""
+        html_digest = f"""
         <html>
           <body style="font-family:Segoe UI,Roboto,Arial,sans-serif; background:#f9f9f9; padding:20px;">
             <div style="max-width:600px; margin:auto; background:white; border-radius:10px; padding:30px; box-shadow:0 0 10px rgba(0,0,0,0.05);">
@@ -116,8 +116,6 @@ if __name__ == "__main__":
           </body>
         </html>
         """
-
-
 
         # 5) Log output
         print("===== Final Digest (plain-text) =====")
