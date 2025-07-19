@@ -13,7 +13,7 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # ───────────────────────────────────────────────────────────────────
 
 def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
-    """Use Gemini to generate custom titles from article title + summary."""
+    """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
         return "• No fresh cybersecurity headlines found in the last 24h."
 
@@ -28,22 +28,43 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
         )
 
         prompt = (
-            "You are a cybersecurity editor. Write a short, punchy title for the following news article. "
-            "Include appropriate emojis. " + cve_hint +
-            "Avoid hashtags or links.\n\n"
+            "You are a cybersecurity editor. For the following news article, "
+            "first write a short, punchy title including appropriate emojis. "
+            "Then, provide 3-4 concise, impactful bullet points summarizing the key takeaways. "
+            f"{cve_hint}"
+            "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
             f"Description: {article['summary']}"
         )
 
         try:
             response = model.generate_content(prompt)
-            final_title = response.text.strip().splitlines()[0]
-        except Exception:
-            final_title = article['title']  # fallback
+            generated_content = response.text.strip()
+
+            lines = generated_content.splitlines()
+            if len(lines) > 1 and lines[0].strip() != '':
+                final_title = lines[0].strip()
+                bullet_points_html = "".join([
+                    f"<li style='margin-bottom:8px;'>{line.strip('* ').strip('- ').strip()}</li>"
+                    for line in lines[1:] if line.strip() and (line.strip().startswith('*') or line.strip().startswith('-'))
+                ])
+                if not bullet_points_html:
+                    summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+                else:
+                    summary_html = f"<ul style='padding-left:20px; margin:0 0 20px; list-style-type:disc; color:#cccccc;'>{bullet_points_html}</ul>"
+            else:
+                final_title = article['title']
+                summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+
+        except Exception as e:
+            print(f"Error generating content for article '{article['title']}': {e}")
+            traceback.print_exc()
+            final_title = article['title']
+            summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
 
         results.append({
             "title": final_title,
-            "summary": article['summary'],
+            "summary_html": summary_html,
             "link": article['link'],
             "image": article.get("image")
         })
@@ -70,10 +91,10 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         news_block = "\n\n".join([
-            f"{item['title']}\n{item['summary']}\n{item['link']}"
+            f"{item['title']}\n{item['summary_html'].replace('<li>','- ').replace('</li>','').replace('<ul>','').replace('</ul>','').replace('<p>','').replace('</p>','')}"
             for item in summaries
         ])
-        digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
+        digest = f"🕵️‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
 
         # Generate Quick Links section
         quick_links = "\n".join([
@@ -91,7 +112,7 @@ if __name__ == "__main__":
                     if item.get("image") else ""
                 )
                 + f"<h2 style='font-size:22px; color:#00F5D4; font-weight:700; margin:0 0 15px; line-height:1.3;'>{item['title']}</h2>"
-                f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{item['summary']}</p>"
+                f"{item['summary_html']}"
                 f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
                 f"</div>"
             )
@@ -150,7 +171,7 @@ if __name__ == "__main__":
                     h1, h2, h3 {{
                         color: #00F5D4 !important;
                     }}
-                    p {{
+                    p, li {{
                         color: #cccccc !important;
                     }}
                 }}
