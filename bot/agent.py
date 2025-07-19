@@ -97,7 +97,8 @@ if __name__ == "__main__":
             <div style="max-width:640px; margin:40px auto; background:#121212; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
 
               <!-- Header with Logo -->
-              <div style="background:#00ffe0; color:#000000; padding:24px 32px; display:flex; align-items:center; gap:16px;">
+            <div style="background:#00ffe0; color:#000000; padding:24px 32px; display:flex; align-items:flex-start; gap:16px;">
+
                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png" alt="Logo" style="height:48px; border-radius:8px;" />
                 <div>
                   <h1 style="margin:0; font-size:28px; font-weight:700; font-family:'Space Grotesk', sans-serif; letter-spacing:-0.5px;">
