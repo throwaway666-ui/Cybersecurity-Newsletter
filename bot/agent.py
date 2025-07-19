@@ -6,8 +6,8 @@ from rss import today_items
 from send_email import send_html_email  # custom Gmail sender
 
 # ── Secrets / env vars ─────────────────────────────────────────────
-TG_TOKEN      = os.environ["TG_TOKEN"]
-TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
+TG_TOKEN = os.environ["TG_TOKEN"]
+TG_CHAT_ID = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
@@ -83,7 +83,8 @@ if __name__ == "__main__":
             html_items += (
                 f"<div style='margin-bottom:32px;'>"
                 + (
-                    f"<img src=\"{item['image']}\" alt=\"news image\" style=\"width:100%; border-radius:12px; margin:12px 0;\" />"
+                    f"<img src=\"{item['image']}\" alt=\"news image\" "
+                      "style=\"width:100%; border-radius:12px; margin:12px 0;\" />"
                     if item.get("image") else ""
                 )
                 + f"<h2 style='font-size:18px; color:#00F5D4; font-weight:700; margin:0 0 12px;'>"
@@ -96,23 +97,23 @@ if __name__ == "__main__":
         <html>
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
             <!-- Header Block -->
-<div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
-  <div style="display:flex; align-items:center; justify-content:space-between;">
-    
-    <!-- Logo (Left) -->
-    <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-         alt="logo" width="48" height="48" style="border-radius:12px; flex-shrink:0;" />
+            <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                
+                <!-- Logo (Left) -->
+                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
+                     alt="logo" width="48" height="48" style="border-radius:12px; flex-shrink:0;" />
 
-    <!-- Title & Date (Center/Right) -->
-    <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right;">
-      <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">
-        Cybersecurity Digest
-      </h1>
-      <span style="font-size:14px; font-weight:500;">{today_str}</span>
-    </div>
+                <!-- Title & Date (Center/Right) -->
+                <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right;">
+                  <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">
+                    Cybersecurity Digest
+                  </h1>
+                  <span style="font-size:14px; font-weight:500;">{today_str}</span>
+                </div>
 
-  </div>
-</div>
+              </div>
+            </div>
 
             <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
               <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📰 Today’s Cybersecurity Headlines</h3>
