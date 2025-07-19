@@ -90,9 +90,9 @@ if __name__ == "__main__":
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
             <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
               <div style="display:flex; align-items:center;">
-                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/logo.png?raw=true"
-                     alt="logo" width="48" height="48" style="border-radius:12px; margin-right:12px;" />
-                <h1 style="margin:0; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;">
+                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
+                   alt="logo" width="48" height="48" style="border-radius:12px; margin-right:12px;" />
+                <h1 style="margin:2; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;">
                   Cybersecurity Digest <span style="font-size:14px; font-weight:500;">{today_str}</span>
                 </h1>
               </div>
