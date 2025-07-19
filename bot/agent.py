@@ -3,7 +3,7 @@ import os, datetime, requests, sys, traceback, time
 import google.generativeai as genai
 
 from rss import today_items
-from send_email import send_html_email  # custom Gmail sender
+from send_email import send_html_email # custom Gmail sender
 
 # ── Secrets / env vars ─────────────────────────────────────────────
 TG_TOKEN = os.environ["TG_TOKEN"]
@@ -15,7 +15,7 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
     """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
-        return "• No fresh cybersecurity headlines found in the last 24h."
+        return "• No fresh cybersecurity headlines found in the last\u202f24h."
 
     genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash-latest")
@@ -81,7 +81,7 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
                 
                 # If no bullets were successfully parsed, fallback for details
                 if not details_html:
-                     details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original summary as paragraph
+                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original summary as paragraph
 
                 # If no rundown text, use beginning of original summary
                 if not rundown_text:
@@ -118,7 +118,7 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
     return results
 
 def send_to_telegram(text: str) -> None:
-    """Send plain‑text message to Telegram."""
+    """Send plain\u202ftext message to Telegram."""
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
     payload = {
         "chat_id": TG_CHAT_ID,
@@ -128,12 +128,14 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-# ── Main routine ───────────────────────────────────────────────────
+# \u2500\u2500 Main routine \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 if __name__ == "__main__":
     t0 = time.time()
     try:
         raw_articles = today_items(max_items=25)
+        print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}") # <--- ADDED LINE
         summaries = summarise_rss(raw_articles, bullets=8)
+        print(f"DEBUG: Number of summaries generated: {len(summaries)}") # <--- ADDED LINE
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # --- Plain-text digest for Telegram (adapted to new structure) ---
@@ -142,7 +144,7 @@ if __name__ == "__main__":
             f"{item['summary_content_html'].replace('<p','\n').replace('</p>','').replace('<ul>','').replace('</ul>','').replace('<li>','- ').replace('</li>','\n').replace('<span style=','').replace('</span>','').replace(';','')}" # Aggressive stripping for plain text
             for item in summaries
         ])
-        digest = f"🕵️‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
+        digest = f"🕵️\u200b♂️ Cybersecurity Digest \u2014 {today_str}\n\n{news_block}"
         # -------------------------------------------------------------------
 
         # Generate Quick Links section
@@ -229,7 +231,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="padding: 20px 25px; text-align: left; display:flex; align-items:center; justify-content:space-between;">
                                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-                                     alt="logo" width="48" height="48" style="border-radius:10px; flex-shrink:0; vertical-align:middle;" />
+                                    alt="logo" width="48" height="48" style="border-radius:10px; flex-shrink:0; vertical-align:middle;" />
                                 <div style="text-align:right;">
                                     <h1 style="margin:0; font-size:24px; font-weight:800; color:#000; letter-spacing:-0.5px;">
                                         Cybersecurity Digest
@@ -283,7 +285,7 @@ if __name__ == "__main__":
         print("=====================================")
 
         send_to_telegram(digest)
-        send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
+        send_html_email(f"🕵️ Cybersecurity Digest \u2014 {today_str}", html_digest)
 
         print(f"✅ Sent to Telegram and Gmail!  Runtime: {time.time() - t0:.1f}s")
 
