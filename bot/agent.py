@@ -1,41 +1,12 @@
 from __future__ import annotations
-import os, datetime, requests, sys, traceback, time
-import google.generativeai as genai
-
+import os, datetime, requests, sys, traceback, time, re
 from rss import today_items
 from send_email import send_html_email  # custom Gmail sender
 
 # ── Secrets / env vars ─────────────────────────────────────────────
 TG_TOKEN      = os.environ["TG_TOKEN"]
 TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
-GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # ───────────────────────────────────────────────────────────────────
-
-def summarise_rss(items: list[dict], bullets: int = 5) -> str:
-    """Ask Gemini Flash 2.5 to craft emoji‑enhanced news bullets."""
-    if not items:
-        return "• No fresh cybersecurity headlines found in the last 24h."
-
-    genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-
-    formatted_items = "\n- ".join(
-        f"{i['title']} — {i['summary']}" if i.get("summary") else i["title"] for i in items
-    )
-
-    prompt = (
-        "You are a cybersecurity journalist.\n"
-        f"Create up to {bullets} concise, punchy bullets (~25 words each) summarizing these headlines.\n"
-        "Guidelines:\n"
-        "• Start each bullet with an appropriate emoji (e.g., 🚨 critical vuln, ⚠️ exploit, 🧠 analyst report, 🌍 global news).\n"
-        "• Highlight CVE IDs in square brackets like [CVE-2025-1234].\n"
-        "• No hashtags, no links, no markdown codes other than [CVE-…].\n\n"
-        f"Headlines:\n- {formatted_items}"
-    )
-
-    resp = model.generate_content(prompt)
-    bullets_out = [ln.strip() for ln in resp.text.strip().splitlines() if ln.strip()]
-    return "\n".join(bullets_out[:bullets])
 
 def send_to_telegram(text: str) -> None:
     """Send plain‑text message to Telegram."""
@@ -52,15 +23,43 @@ def send_to_telegram(text: str) -> None:
 if __name__ == "__main__":
     t0 = time.time()
     try:
-        # 1) RSS → Gemini summary
-        rss_items = today_items(max_items=25)
-        news_block = "📰 Today’s Cybersecurity Headlines:\n" + summarise_rss(rss_items, bullets=5)
+        # 1) Get RSS items (title, summary, link, image)
+        rss_items = today_items(max_items=8)
 
-        # 2) Assemble final digest (plain-text)
+        # 2) Assemble HTML content
         today_str = datetime.date.today().strftime("%d %b %Y")
-        digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
+        html_items = ""
+        plain_items = ""
 
-        # 3) Convert to HTML format
+        for item in rss_items:
+            title = item.get("title", "No title")
+            summary = item.get("summary", "")
+            link = item.get("link", "")
+            image = item.get("image", "")
+
+            # Highlight CVE IDs
+            title = re.sub(r"(CVE-\d{4}-\d+)", r"<strong>[\1]</strong>", title)
+            summary = re.sub(r"(CVE-\d{4}-\d+)", r"<strong>[\1]</strong>", summary)
+
+            html_items += f"""
+            <div style='margin-bottom:30px;'>
+              <h3 style='color:#00ffe0; font-size:16px; margin:0;'>Cyber News</h3>
+              {f'<img src="{image}" alt="news image" style="width:100%; border-radius:12px; margin:12px 0;" />' if image else ''}
+              <h2 style='font-size:20px; color:#ffffff; font-weight:600; margin:4px 0;'>
+                <a href="{link}" style="color:#ffffff; text-decoration:none;">{title}</a>
+              </h2>
+              <p style='color:#cccccc; font-size:15px; line-height:1.6; margin:0;'>
+                {summary}
+              </p>
+              <hr style="border: none; border-top: 1px solid #333; margin:24px 0;">
+            </div>
+            """
+
+            plain_items += f"🔹 {title}\n{summary}\n{link}\n\n"
+
+        digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{plain_items.strip()}"
+
+        # 3) Compose full HTML email
         html_digest = f"""
         <html>
           <body style="margin:0; padding:0; background:#0f0f0f; font-family:'Segoe UI', Roboto, Arial, sans-serif; color:#ffffff;">
@@ -77,9 +76,7 @@ if __name__ == "__main__":
               <!-- Cyber News -->
               <div style="background:#1e1e1e; padding:32px;">
                 <h2 style="color:#ffffff; font-size:20px; font-weight:600;">📰 Today’s Cybersecurity Headlines</h2>
-                <ul style="padding-left:20px; font-size:16px; line-height:1.8; color:#cccccc;">
-                  {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
-                </ul>
+                {html_items}
               </div>
 
               <!-- Footer -->
@@ -93,12 +90,11 @@ if __name__ == "__main__":
         </html>
         """
 
-        # 4) Log output
+        # 4) Send to Telegram and Gmail
         print("===== Final Digest (plain-text) =====")
         print(digest)
         print("=====================================")
 
-        # 5) Send to Telegram and Gmail
         send_to_telegram(digest)
         send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
 
