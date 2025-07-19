@@ -1,9 +1,5 @@
-"""
-bot/rss.py  –  Collect headlines and descriptions from the past 24 hours from 3 RSS feeds.
-"""
-
 from __future__ import annotations
-import datetime, feedparser
+import datetime, feedparser, re
 from typing import List, Dict
 
 FEEDS = [
@@ -12,8 +8,24 @@ FEEDS = [
     "https://securityaffairs.com/feed",
 ]
 
+def extract_image(entry) -> str:
+    # Try standard media:content image
+    if "media_content" in entry:
+        for media in entry.media_content:
+            if "url" in media:
+                return media["url"]
+
+    # Try in summary HTML using regex
+    summary = entry.get("summary", "")
+    match = re.search(r'<img[^>]+src="([^"]+)"', summary)
+    if match:
+        return match.group(1)
+
+    return ""  # fallback
+
 def today_items(max_items: int = 25, hours_back: int = 24) -> List[Dict[str, str]]:
-    """Return a list of dicts: {title, summary} for items in the past `hours_back` hours."""
+    """Return recent RSS items with title, summary, link, and image."""
+    import datetime
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours_back)
     items = []
 
@@ -24,16 +36,27 @@ def today_items(max_items: int = 25, hours_back: int = 24) -> List[Dict[str, str
             if not stamp:
                 continue
             entry_dt = datetime.datetime(*stamp[:6], tzinfo=datetime.timezone.utc)
-            if entry_dt >= cutoff:
-                title = e.title.strip()
-                summary = getattr(e, "summary", "") or getattr(e, "description", "")
-                items.append({"title": title, "summary": summary.strip()})
+            if entry_dt < cutoff:
+                continue
 
-    # Deduplicate by title while preserving order
-    seen, unique = set(), []
+            title = e.get("title", "").strip()
+            summary = re.sub(r'<.*?>', '', e.get("summary", "")).strip()  # strip HTML
+            link = e.get("link", "").strip()
+            image = extract_image(e)
+
+            items.append({
+                "title": title,
+                "summary": summary,
+                "link": link,
+                "image": image,
+            })
+
+    # Deduplicate
+    seen_titles = set()
+    unique = []
     for item in items:
-        if item["title"] not in seen:
-            seen.add(item["title"])
+        if item["title"] not in seen_titles:
+            seen_titles.add(item["title"])
             unique.append(item)
 
     return unique[:max_items]
