@@ -5,12 +5,12 @@ import google.generativeai as genai
 from rss import today_items
 from send_email import send_html_email  # custom Gmail sender
 
-# ── Secrets / env vars ─────────────────────────────────────────────
+# ── Secrets / env vars ────────────────────────────────────────────────
 TG_TOKEN = os.environ["TG_TOKEN"]
 TG_CHAT_ID = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
-# ───────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
 
 def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
     """Use Gemini to generate custom titles from article title + summary."""
@@ -61,7 +61,7 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-# ── Main routine ───────────────────────────────────────────────────
+# ── Main routine ─────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
@@ -98,25 +98,23 @@ if __name__ == "__main__":
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
             <!-- Header Block -->
             <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
-              <div style="display:flex; align-items:center; justify-content:space-between;">
-                
-                <!-- Logo (Left) -->
+              <div style="display:flex; align-items:center; gap:16px;">
+                <!-- Logo -->
                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
                      alt="logo" width="48" height="48" style="border-radius:12px; flex-shrink:0;" />
 
-                <!-- Title & Date (Center/Right) -->
-                <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right;">
-                  <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">
+                <!-- Title & Date -->
+                <div style="display:flex; flex-direction:column; justify-content:center; gap:6px;">
+                  <h1 style="margin:0; font-size:22px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px; color:#000;">
                     Cybersecurity Digest
                   </h1>
-                  <span style="font-size:14px; font-weight:500;">{today_str}</span>
+                  <p style="margin:0; font-size:14px; font-weight:500; font-family:'Segoe UI', sans-serif; color:#000;">{today_str}</p>
                 </div>
-
               </div>
             </div>
 
             <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
-              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📰 Today’s Cybersecurity Headlines</h3>
+              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">Today’s Cybersecurity Headlines</h3>
               {html_items}
             </div>
 
@@ -142,3 +140,4 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
+
