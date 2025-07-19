@@ -87,25 +87,25 @@ if __name__ == "__main__":
 
         html_digest = f"""
         <html>
-          <body style=\"margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;\">
-            <div style=\"padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;\">
-              <div style=\"display:flex; align-items:center; gap:16px;\">
-                <img src=\"https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/logo.png?raw=true\" alt=\"logo\" width=\"48\" height=\"48\" style=\"border-radius:12px;\" />
-                <div style=\"display:flex; flex-direction:column; justify-content:center; gap:6px;\">
-                  <h1 style=\"margin:0; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;\">Cybersecurity Digest</h1>
-                  <p style=\"margin:0; font-size:14px; font-weight:500; font-family:'Segoe UI', sans-serif;\">{today_str}</p>
-                </div>
+          <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
+            <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
+              <div style="display:flex; align-items:center;">
+                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/logo.png?raw=true"
+                     alt="logo" width="48" height="48" style="border-radius:12px; margin-right:12px;" />
+                <h1 style="margin:0; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;">
+                  Cybersecurity Digest <span style="font-size:14px; font-weight:500;">{today_str}</span>
+                </h1>
               </div>
             </div>
 
-            <div style=\"padding:24px; color:#E0E0E0; background-color:#121212;\">
-              <h3 style=\"color:#FFFFFF; font-size:18px; margin-bottom:24px;\">📰 Today’s Cybersecurity Headlines</h3>
+            <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
+              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📰 Today’s Cybersecurity Headlines</h3>
               {html_items}
             </div>
 
-            <div style=\"text-align:center; padding:20px 0; font-size:12px; color:#888888;\">
+            <div style="text-align:center; padding:20px 0; font-size:12px; color:#888888;">
               Stay secure. This digest was sent by your automated cybersecurity agent.<br>
-              <span style=\"color:#555;\">© {today_str[:4]} Cyber Digest Bot</span>
+              <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
             </div>
 
           </body>
@@ -126,3 +126,4 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
+
