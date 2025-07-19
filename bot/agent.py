@@ -65,85 +65,74 @@ def send_to_telegram(text: str) -> None:
 if __name__ == "__main__":
     t0 = time.time()
     try:
-        # 1) Fetch RSS articles
         raw_articles = today_items(max_items=25)
         summaries = summarise_rss(raw_articles, bullets=8)
         today_str = datetime.date.today().strftime("%d %b %Y")
 
-        # 2) Assemble plain-text
         news_block = "\n\n".join([
             f"{item['title']}\n{item['summary']}\n{item['link']}"
             for item in summaries
         ])
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
 
-        # 3) Convert to HTML format
+        # Generate Quick Links section
+        quick_links = "\n".join([
+            f"<li><a href=\"{item['link']}\" style=\"color:#00F5D4; text-decoration:none;\">{item['title']}</a></li>"
+            for item in summaries
+        ])
+
         html_items = ""
         for item in summaries:
             html_items += (
-                f"<div style='background:#1a1a1a; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.3); margin-bottom:32px;'>"
+                f"<div style='margin-bottom:32px; padding:20px; border-radius:16px; background-color:#1E1E1E; box-shadow:0 0 12px rgba(0,255,224,0.15);'>"
                 + (
                     f"<img src=\"{item['image']}\" alt=\"news image\" "
-                      "style=\"width:100%; border-radius:12px; margin:12px 0;\" />"
+                    "style=\"width:100%; border-radius:12px; margin:12px 0;\" />"
                     if item.get("image") else ""
                 )
                 + f"<h2 style='font-size:18px; color:#00F5D4; font-weight:700; margin:0 0 12px;'>"
                 f"<a href=\"{item['link']}\" style=\"color:#00F5D4; text-decoration:none;\">{item['title']}</a></h2>"
                 f"<p style='color:#cccccc; font-size:15px; line-height:1.6; margin:0;'>{item['summary']}</p>"
                 f"</div>"
-                f"<hr style='border:0; border-top:1px solid #2a2a2a; margin:32px 0;' />"
             )
 
         html_digest = f"""
         <html>
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
             <!-- Header Block -->
-            <div style="padding:24px; background: linear-gradient(135deg, #00FFE0, #00C2FF); border-top-left-radius:24px; border-top-right-radius:24px;">
-              <div style="display:flex; align-items:center; gap:16px;">
-
-                <!-- Logo -->
+            <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
                      alt="logo" width="48" height="48" style="border-radius:12px; flex-shrink:0;" />
-
-                <!-- Title & Date -->
-                <div>
-                  <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">Cybersecurity Digest</h1>
-                  <p style="margin:4px 0 0; font-size:13px; color:#444; font-weight:500;">
-                    Daily AI-curated headlines from across the cybersecurity world.
-                  </p>
-                  <span style="font-size:14px; font-weight:500; color:#000;">{today_str}</span>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right;">
+                  <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">
+                    Cybersecurity Digest
+                  </h1>
+                  <span style="font-size:14px; font-weight:500;">{today_str}</span>
                 </div>
-
               </div>
             </div>
 
-            <!-- News Section -->
             <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
-              <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:12px; font-size:18px; margin-bottom:24px;">
-                🛡 Top Threats Today
-              </h3>
+              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:12px;">🗂 Quick Headlines</h3>
+              <ul style="padding-left:20px; margin:0; color:#00F5D4; font-size:16px;">{quick_links}</ul>
+              <hr style="margin:24px 0; border:0; border-top:1px solid #333;">
+              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📚 Deep Dive</h3>
               {html_items}
             </div>
 
-            <!-- Footer -->
             <div style="text-align:center; padding:20px 0; font-size:12px; color:#888888;">
               Stay secure. This digest was sent by your automated cybersecurity agent.<br>
-              <p style="font-size:12px; color:#777;">
-                Powered by <a href="https://openai.com" style="color:#00FFE0; text-decoration:none;">OpenAI</a>
-                & <a href="#" style="color:#00FFE0; text-decoration:none;">Cyber Digest</a><br>
-                <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
-              </p>
+              <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
             </div>
           </body>
         </html>
         """
 
-        # 4) Log output
         print("===== Final Digest (plain-text) =====")
         print(digest)
         print("=====================================")
 
-        # 5) Send to Telegram and Gmail
         send_to_telegram(digest)
         send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
 
@@ -152,4 +141,3 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
-
