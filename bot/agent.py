@@ -30,7 +30,7 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
             "first write a short, punchy title including appropriate emojis. "
-            "Then, provide 3-4 concise, impactful bullet points summarizing the key takeaways. "
+            "Then, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. "
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
@@ -43,56 +43,76 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
 
             lines = generated_content.splitlines()
             final_title = article['title'] # Default fallback to original title
-            summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>" # Default fallback to original summary
+            rundown_text = "" # Will store the "The Rundown:" sentence
+            details_html = "" # Will store the "The details:" bullet points
 
             if lines:
                 # 1. Parse Title: Be more robust, remove "Title:" prefix if present
                 potential_title = lines[0].strip()
                 if potential_title.lower().startswith("title:"):
                     final_title = potential_title[len("title:"):].strip()
-                elif potential_title: # If it's just the title without "Title:" prefix
+                elif potential_title:
                     final_title = potential_title
-                # No 'else', keep original title as fallback if first line is empty
 
-                # 2. Parse Bullet Points: Process all subsequent lines
-                bullet_points = []
-                # Start from the second line (index 1) or later if the title line was empty
-                start_index_for_bullets = 1 if len(lines) > 1 and potential_title else 0 # If potential_title was empty, start checking from line 0
-                for line in lines[start_index_for_bullets:]:
+                # 2. Parse "Rundown" and "Details"
+                content_lines = lines[1:] # All lines after the title
+
+                # Try to find a good "rundown" sentence (first non-bullet, non-empty line)
+                for i, line in enumerate(content_lines):
                     stripped_line = line.strip()
-                    # Check if the line looks like a bullet point or is substantive
-                    # Also, ensure it's not a repeat of the title itself
-                    if stripped_line and \
-                       (stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10) and \
-                       stripped_line.lower() != final_title.lower().strip(): # Avoid repeating title as a bullet
+                    if stripped_line and not (stripped_line.startswith('*') or stripped_line.startswith('-')):
+                        rundown_text = stripped_line
+                        content_lines = content_lines[i+1:] # Remaining lines for bullets
+                        break
+
+                bullet_points = []
+                for line in content_lines:
+                    stripped_line = line.strip()
+                    if stripped_line and (stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10):
                         bullet_points.append(stripped_line.strip('* ').strip('- ').strip())
 
                 if bullet_points:
-                    # Create HTML list, ensuring empty bullets don't create empty <li>
                     bullet_points_html_content = "".join([
                         f"<li style='margin-bottom:8px;'>{bp}</li>"
                         for bp in bullet_points if bp
                     ])
-                    if bullet_points_html_content: # Only create <ul> if there are actual bullets
-                        summary_html = f"<ul style='padding-left:20px; margin:0 0 20px; list-style-type:disc; color:#cccccc;'>{bullet_points_html_content}</ul>"
-                    else:
-                        summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
-                else:
-                    # If no bullet points were generated/parsed, fall back to original summary
-                    summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+                    if bullet_points_html_content:
+                        details_html = f"<ul style='padding-left:20px; margin:0; list-style-type:disc; color:#cccccc; font-size:15px; line-height:1.6;'>{bullet_points_html_content}</ul>"
+                
+                # If no bullets were successfully parsed, fallback for details
+                if not details_html:
+                     details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original summary as paragraph
+
+                # If no rundown text, use beginning of original summary
+                if not rundown_text:
+                    rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
+                    if len(rundown_text) > 150: # Cap for conciseness
+                        rundown_text = rundown_text[:150] + '...'
+
+
+            # Assemble the final HTML for the summary section
+            # If AI didn't provide good content, fall back to original summary as a single paragraph
+            if not rundown_text and not details_html:
+                final_summary_content = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
+            else:
+                final_summary_content = (
+                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Rundown: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
+                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
+                    f"{details_html}"
+                )
+
 
         except Exception as e:
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
-            # If any error, fall back to original title and summary
             final_title = article['title']
-            summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+            final_summary_content = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
 
         results.append({
             "title": final_title,
-            "summary_html": summary_html,
+            "summary_content_html": final_summary_content, # Store the full HTML block
             "link": article['link'],
-            "image": article.get("image")
+            # "image": article.get("image") # No longer needed for display
         })
 
     return results
@@ -116,11 +136,14 @@ if __name__ == "__main__":
         summaries = summarise_rss(raw_articles, bullets=8)
         today_str = datetime.date.today().strftime("%d %b %Y")
 
+        # --- Plain-text digest for Telegram (adapted to new structure) ---
         news_block = "\n\n".join([
-            f"{item['title']}\n{item['summary_html'].replace('<li>','- ').replace('</li>','').replace('<ul>','').replace('</ul>','').replace('<p>','').replace('<br>','\n').replace('</p>','')}"
+            f"{item['title']}\n"
+            f"{item['summary_content_html'].replace('<p','\n').replace('</p>','').replace('<ul>','').replace('</ul>','').replace('<li>','- ').replace('</li>','\n').replace('<span style=','').replace('</span>','').replace(';','')}" # Aggressive stripping for plain text
             for item in summaries
         ])
         digest = f"🕵️‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
+        # -------------------------------------------------------------------
 
         # Generate Quick Links section
         quick_links = "\n".join([
@@ -132,14 +155,10 @@ if __name__ == "__main__":
         for item in summaries:
             html_items += (
                 f"<div style='margin-bottom:30px; padding:25px; border-radius:12px; background-color:#1E1E1E; box-shadow:0 6px 15px rgba(0,255,224,0.1);'>"
-                + (
-                    f"<img src=\"{item['image']}\" alt=\"news image\" "
-                    "style=\"width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-bottom:20px;\" />"
-                    if item.get("image") else ""
-                )
+                # Image removed here
                 + f"<h2 style='font-size:22px; color:#00F5D4; font-weight:700; margin:0 0 15px; line-height:1.3;'>{item['title']}</h2>"
-                f"{item['summary_html']}"
-                f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
+                f"{item['summary_content_html']}" # <--- Use the pre-formatted HTML content here
+                f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; margin-top:20px; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
                 f"</div>"
             )
 
@@ -197,7 +216,7 @@ if __name__ == "__main__":
                     h1, h2, h3 {{
                         color: #00F5D4 !important;
                     }}
-                    p, li {{
+                    p, li, span {{ /* Add span here for rundown text */
                         color: #cccccc !important;
                     }}
                 }}
@@ -225,7 +244,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="padding: 25px 25px 0;">
                                 <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
-                                    🛡️ Top Threats Today
+                                    🛡️ Quick Links
                                 </h3>
                                 <ul style="padding-left:25px; margin:0; color:#00F5D4; font-size:16px; line-height:1.8;">{quick_links}</ul>
                             </td>
@@ -237,7 +256,7 @@ if __name__ == "__main__":
                         </tr>
                         <tr>
                             <td style="padding: 0 25px 25px;">
-                                <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Deep Dive</h3>
+                                <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Today's Stories</h3>
                                 {html_items}
                             </td>
                         </tr>
