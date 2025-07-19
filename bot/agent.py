@@ -95,23 +95,24 @@ if __name__ == "__main__":
         html_digest = f"""
         <html>
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
-            <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
-              <div style="display:flex; align-items:center; justify-content:space-between;">
-                
-                <!-- Logo Left -->
-                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-                     alt="logo" width="48" height="48" style="border-radius:12px;" />
+            <!-- Header Block -->
+<div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    
+    <!-- Logo (Left) -->
+    <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
+         alt="logo" width="48" height="48" style="border-radius:12px; flex-shrink:0;" />
 
-                <!-- Title Center -->
-                <h1 style="margin:0; font-size:20px; font-weight:600; text-align:center;">
-                  Cybersecurity Digest
-                </h1>
+    <!-- Title & Date (Center/Right) -->
+    <div style="display:flex; flex-direction:column; align-items:flex-end; text-align:right;">
+      <h1 style="margin:0; font-size:20px; font-weight:700; color:#000;">
+        Cybersecurity Digest
+      </h1>
+      <span style="font-size:14px; font-weight:500;">{today_str}</span>
+    </div>
 
-                <!-- Date Right -->
-                <span style="font-size:14px; font-weight:500;">{today_str}</span>
-
-              </div>
-            </div>
+  </div>
+</div>
 
             <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
               <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📰 Today’s Cybersecurity Headlines</h3>
