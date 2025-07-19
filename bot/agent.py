@@ -24,7 +24,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
     for article in articles[:bullets]:
         cve_hint = (
             "Highlight CVE IDs in square brackets like [CVE-2025-1234]. "
-            if "cve" in article["title"].lower() or "cve" in article["summary"].lower() else ""
+            if "cve" in article["title"].lower() or article["summary"].lower() else ""
         )
 
         prompt = (
@@ -34,7 +34,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
-            f"Description: {article['summary']}"
+            f"Description: {article['summary']}" # Use the plain text summary for the prompt
         )
 
         try:
@@ -81,19 +81,19 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
                 
                 # If no bullets were successfully parsed, fallback for details
                 if not details_html:
-                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original summary as paragraph
+                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original plain summary as paragraph
 
-                # If no rundown text, use beginning of original summary
+                # If no rundown text, use beginning of original plain summary
                 if not rundown_text:
                     rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
                     if len(rundown_text) > 150: # Cap for conciseness
                         rundown_text = rundown_text[:150] + '...'
 
-
             # Assemble the final HTML for the summary section
-            # If AI didn't provide good content, fall back to original summary as a single paragraph
+            # If AI didn't provide good content, fall back to original HTML content or plain summary as a single paragraph
             if not rundown_text and not details_html:
-                final_summary_content = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
+                # Fallback to the original HTML content if AI generation was poor
+                final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
                 final_summary_content = (
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Rundown: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
@@ -101,20 +101,20 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
                     f"{details_html}"
                 )
 
-
         except Exception as e:
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
             final_title = article['title']
-            final_summary_content = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
-        
+            # On error, fallback to original HTML content or plain summary
+            final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+            
         time.sleep(60) # Pause for 60 seconds to respect Gemini API rate limits
 
         results.append({
             "title": final_title,
             "summary_content_html": final_summary_content, # Store the full HTML block
             "link": article['link'],
-            # "image": article.get("image") # No longer needed for display
+            "image_url": article.get("image_url", "") # Pass through the image_url
         })
 
     return results
@@ -141,9 +141,10 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # --- Plain-text digest for Telegram (adapted to new structure) ---
+        # Note: Aggressively stripping HTML for plain text Telegram message
         news_block = "\n\n".join([
             f"{item['title']}\n"
-            f"{item['summary_content_html'].replace('<p','\n').replace('</p>','').replace('<ul>','').replace('</ul>','').replace('<li>','- ').replace('</li>','\n').replace('<span style=','').replace('</span>','').replace(';','')}" # Aggressive stripping for plain text
+            f"{re.sub(r'<.*?>', '', item['summary_content_html']).strip()}" # Strip all HTML for plain text
             for item in summaries
         ])
         digest = f"🕵️\u200b♂️ Cybersecurity Digest \u2014 {today_str}\n\n{news_block}"
@@ -157,10 +158,16 @@ if __name__ == "__main__":
 
         html_items = ""
         for item in summaries:
+            # Add image if available
+            image_html = ""
+            if item.get('image_url'): # Check if image_url exists and is not empty
+                image_html = f"<img src=\"{item['image_url']}\" alt=\"{item['title']}\" style=\"width:100%; max-width:550px; height:auto; display:block; margin:0 auto 20px; border-radius:8px; object-fit:cover;\">"
+
             html_items += (
                 f"<div style='margin-bottom:30px; padding:25px; border-radius:12px; background-color:#1E1E1E; box-shadow:0 6px 15px rgba(0,255,224,0.1);'>"
                 + f"<h2 style='font-size:22px; color:#00F5D4; font-weight:700; margin:0 0 15px; line-height:1.3;'>{item['title']}</h2>"
-                f"{item['summary_content_html']}" # <--- Use the pre-formatted HTML content here
+                + image_html + # Insert image here
+                f"{item['summary_content_html']}" # Use the pre-formatted HTML content here
                 f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; margin-top:20px; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
                 f"</div>"
             )
