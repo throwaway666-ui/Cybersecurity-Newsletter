@@ -9,16 +9,19 @@ from send_email import send_html_email  # custom Gmail sender
 TG_TOKEN      = os.environ["TG_TOKEN"]
 TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
-# GMAIL secrets are handled inside email.py via env vars
-# ─────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────
 
-def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
-    """Ask Gemini Flash 2.5 to craft emoji‡enhanced news bullets."""
-    if not headlines:
+def summarise_rss(items: list[dict], bullets: int = 5) -> str:
+    """Ask Gemini Flash 2.5 to craft emoji‑enhanced news bullets."""
+    if not items:
         return "• No fresh cybersecurity headlines found in the last 24h."
 
     genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash-latest")
+
+    formatted_items = "\n- ".join(
+        f"{i['title']} — {i['summary']}" if i.get("summary") else i["title"] for i in items
+    )
 
     prompt = (
         "You are a cybersecurity journalist.\n"
@@ -27,8 +30,9 @@ def summarise_rss(headlines: list[str], bullets: int = 5) -> str:
         "• Start each bullet with an appropriate emoji (e.g., 🚨 critical vuln, ⚠️ exploit, 🧠 analyst report, 🌍 global news).\n"
         "• Highlight CVE IDs in square brackets like [CVE-2025-1234].\n"
         "• No hashtags, no links, no markdown codes other than [CVE-…].\n\n"
-        "Headlines:\n- " + "\n- ".join(headlines)
+        f"Headlines:\n- {formatted_items}"
     )
+
     resp = model.generate_content(prompt)
     bullets_out = [ln.strip() for ln in resp.text.strip().splitlines() if ln.strip()]
     return "\n".join(bullets_out[:bullets])
@@ -44,13 +48,13 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-# ── Main routine ─────────────────────────────────────────────
+# ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
         # 1) RSS → Gemini summary
-        headlines = today_items(max_items=25)
-        news_block = "📰 Today’s Cybersecurity Headlines:\n" + summarise_rss(headlines, bullets=5)
+        rss_items = today_items(max_items=25)
+        news_block = "📰 Today’s Cybersecurity Headlines:\n" + summarise_rss(rss_items, bullets=5)
 
         # 2) Assemble final digest (plain-text)
         today_str = datetime.date.today().strftime("%d %b %Y")
@@ -74,7 +78,7 @@ if __name__ == "__main__":
               <div style="background:#1e1e1e; padding:32px;">
                 <h2 style="color:#ffffff; font-size:20px; font-weight:600;">📰 Today’s Cybersecurity Headlines</h2>
                 <ul style="padding-left:20px; font-size:16px; line-height:1.8; color:#cccccc;">
-                  {''.join(f'<li>{line.lstrip("\u2022 ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
+                  {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
                 </ul>
               </div>
 
@@ -103,3 +107,4 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
+
