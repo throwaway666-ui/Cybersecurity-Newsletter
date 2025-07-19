@@ -22,17 +22,25 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
 
     results = []
     for article in articles[:bullets]:
+        cve_hint = (
+            "Highlight CVE IDs in square brackets like [CVE-2025-1234]. "
+            if "cve" in article["title"].lower() or "cve" in article["summary"].lower() else ""
+        )
+
         prompt = (
             "You are a cybersecurity editor. Write a short, punchy title for the following news article. "
-            "Include appropriate emojis and highlight CVE IDs in square brackets. Avoid hashtags or links.\n\n"
+            "Include appropriate emojis. " + cve_hint +
+            "Avoid hashtags or links.\n\n"
             f"Title: {article['title']}\n"
             f"Description: {article['summary']}"
         )
+
         try:
             response = model.generate_content(prompt)
             final_title = response.text.strip().splitlines()[0]
         except Exception:
             final_title = article['title']  # fallback
+
         results.append({
             "title": final_title,
             "summary": article['summary'],
@@ -85,7 +93,7 @@ if __name__ == "__main__":
 
               <!-- Header with Logo -->
               <div style="background:#00ffe0; color:#000000; padding:24px 32px; display:flex; align-items:center; gap:16px;">
-                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/logo.png?raw=true" alt="Logo" style="height:48px; border-radius:8px;" />
+                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png" alt="Logo" style="height:48px; border-radius:8px;" />
                 <div>
                   <h1 style="margin:0; font-size:26px; font-weight:700; letter-spacing:-0.5px;">Cybersecurity Digest</h1>
                   <p style="margin:4px 0 0; font-size:14px; font-weight:500;">{today_str}</p>
@@ -123,3 +131,4 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
+
