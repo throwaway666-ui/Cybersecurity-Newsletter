@@ -18,7 +18,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
         return "• No fresh cybersecurity headlines found in the last\u202f24h."
 
     genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash-latest")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     results = []
     for article in articles[:bullets]:
