@@ -10,7 +10,7 @@ TG_TOKEN      = os.environ["TG_TOKEN"]
 TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
-# ─────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────
 
 def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
     """Use Gemini to generate custom titles from article title + summary."""
@@ -45,8 +45,9 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
             "title": final_title,
             "summary": article['summary'],
             "link": article['link'],
-            "image": article.get('image')
+            "image": article.get("image")
         })
+
     return results
 
 def send_to_telegram(text: str) -> None:
@@ -60,7 +61,7 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-# ── Main routine ─────────────────────────────────────────────
+# ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
@@ -70,7 +71,10 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # 2) Assemble plain-text
-        news_block = "\n\n".join([f"{item['title']}\n{item['summary']}\n{item['link']}" for item in summaries])
+        news_block = "\n\n".join([
+            f"{item['title']}\n{item['summary']}\n{item['link']}"
+            for item in summaries
+        ])
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
 
         # 3) Convert to HTML format
@@ -78,7 +82,10 @@ if __name__ == "__main__":
         for item in summaries:
             html_items += (
                 f"<div style='margin-bottom:32px;'>"
-                + (f"<img src=\"{item['image']}\" alt=\"news image\" style=\"width:100%; border-radius:12px; margin:12px 0;\" />" if item.get("image") else "")
+                + (
+                    f"<img src=\"{item['image']}\" alt=\"news image\" style=\"width:100%; border-radius:12px; margin:12px 0;\" />"
+                    if item.get("image") else ""
+                )
                 + f"<h2 style='font-size:18px; color:#00F5D4; font-weight:700; margin:0 0 12px;'>"
                 f"<a href=\"{item['link']}\" style=\"color:#00F5D4; text-decoration:none;\">{item['title']}</a></h2>"
                 f"<p style='color:#cccccc; font-size:15px; line-height:1.6; margin:0;'>{item['summary']}</p>"
@@ -89,12 +96,20 @@ if __name__ == "__main__":
         <html>
           <body style="margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;">
             <div style="padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;">
-              <div style="display:flex; align-items:center;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                
+                <!-- Logo Left -->
                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-                   alt="logo" width="48" height="48" style="border-radius:12px; margin-right:12px;" />
-                <h1 style="margin:2; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;">
-                  Cybersecurity Digest <span style="font-size:14px; font-weight:500;">{today_str}</span>
+                     alt="logo" width="48" height="48" style="border-radius:12px;" />
+
+                <!-- Title Center -->
+                <h1 style="margin:0; font-size:20px; font-weight:600; text-align:center;">
+                  Cybersecurity Digest
                 </h1>
+
+                <!-- Date Right -->
+                <span style="font-size:14px; font-weight:500;">{today_str}</span>
+
               </div>
             </div>
 
@@ -107,7 +122,6 @@ if __name__ == "__main__":
               Stay secure. This digest was sent by your automated cybersecurity agent.<br>
               <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
             </div>
-
           </body>
         </html>
         """
@@ -126,4 +140,3 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         sys.exit(1)
-
