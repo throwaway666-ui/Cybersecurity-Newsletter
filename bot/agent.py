@@ -111,11 +111,6 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
         })
 
     return results
-# Inside your main block, after fetching raw_articles
-for i, article in enumerate(raw_articles):
-    print(f"Article {i+1} Title: {article['title']}")
-    print(f"Article {i+1} Image URL: {article.get('image_url', 'No image URL found')}")
-    print("-" * 30)
 
 def send_to_telegram(text: str) -> None:
     """Send plain\u202ftext message to Telegram."""
