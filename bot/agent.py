@@ -42,23 +42,49 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
             generated_content = response.text.strip()
 
             lines = generated_content.splitlines()
-            if len(lines) > 1 and lines[0].strip() != '':
-                final_title = lines[0].strip()
-                bullet_points_html = "".join([
-                    f"<li style='margin-bottom:8px;'>{line.strip('* ').strip('- ').strip()}</li>"
-                    for line in lines[1:] if line.strip() and (line.strip().startswith('*') or line.strip().startswith('-'))
-                ])
-                if not bullet_points_html:
-                    summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+            final_title = article['title'] # Default fallback to original title
+            summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>" # Default fallback to original summary
+
+            if lines:
+                # 1. Parse Title: Be more robust, remove "Title:" prefix if present
+                potential_title = lines[0].strip()
+                if potential_title.lower().startswith("title:"):
+                    final_title = potential_title[len("title:"):].strip()
+                elif potential_title: # If it's just the title without "Title:" prefix
+                    final_title = potential_title
+                # No 'else', keep original title as fallback if first line is empty
+
+                # 2. Parse Bullet Points: Process all subsequent lines
+                bullet_points = []
+                # Start from the second line (index 1) or later if the title line was empty
+                start_index_for_bullets = 1 if len(lines) > 1 and potential_title else 0 # If potential_title was empty, start checking from line 0
+                for line in lines[start_index_for_bullets:]:
+                    stripped_line = line.strip()
+                    # Check if the line looks like a bullet point or is substantive
+                    # Also, ensure it's not a repeat of the title itself
+                    if stripped_line and \
+                       (stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10) and \
+                       stripped_line.lower() != final_title.lower().strip(): # Avoid repeating title as a bullet
+                        bullet_points.append(stripped_line.strip('* ').strip('- ').strip())
+
+                if bullet_points:
+                    # Create HTML list, ensuring empty bullets don't create empty <li>
+                    bullet_points_html_content = "".join([
+                        f"<li style='margin-bottom:8px;'>{bp}</li>"
+                        for bp in bullet_points if bp
+                    ])
+                    if bullet_points_html_content: # Only create <ul> if there are actual bullets
+                        summary_html = f"<ul style='padding-left:20px; margin:0 0 20px; list-style-type:disc; color:#cccccc;'>{bullet_points_html_content}</ul>"
+                    else:
+                        summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
                 else:
-                    summary_html = f"<ul style='padding-left:20px; margin:0 0 20px; list-style-type:disc; color:#cccccc;'>{bullet_points_html}</ul>"
-            else:
-                final_title = article['title']
-                summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+                    # If no bullet points were generated/parsed, fall back to original summary
+                    summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
 
         except Exception as e:
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
+            # If any error, fall back to original title and summary
             final_title = article['title']
             summary_html = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
 
@@ -91,7 +117,7 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         news_block = "\n\n".join([
-            f"{item['title']}\n{item['summary_html'].replace('<li>','- ').replace('</li>','').replace('<ul>','').replace('</ul>','').replace('<p>','').replace('</p>','')}"
+            f"{item['title']}\n{item['summary_html'].replace('<li>','- ').replace('</li>','').replace('<ul>','').replace('</ul>','').replace('<p>','').replace('<br>','\n').replace('</p>','')}"
             for item in summaries
         ])
         digest = f"🕵️‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
