@@ -247,7 +247,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="padding: 25px 25px 0;">
                                 <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
-                                    🛡️ Quick Links
+                                    🛡️ Quick Shields
                                 </h3>
                                 <ul style="padding-left:25px; margin:0; color:#00F5D4; font-size:16px; line-height:1.8;">{quick_links}</ul>
                             </td>
