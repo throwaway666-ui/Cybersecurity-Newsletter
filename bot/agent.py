@@ -77,59 +77,37 @@ if __name__ == "__main__":
         html_items = ""
         for item in summaries:
             html_items += (
-                f"<div style='margin-bottom:30px;'>"
+                f"<div style='margin-bottom:32px;'>"
                 + (f"<img src=\"{item['image']}\" alt=\"news image\" style=\"width:100%; border-radius:12px; margin:12px 0;\" />" if item.get("image") else "")
-                + f"<h2 style='font-size:20px; color:#ffffff; font-weight:600; margin:4px 0;'>"
-                f"<a href=\"{item['link']}\" style=\"color:#ffffff; text-decoration:none;\">{item['title']}</a></h2>"
+                + f"<h2 style='font-size:18px; color:#00F5D4; font-weight:700; margin:0 0 12px;'>"
+                f"<a href=\"{item['link']}\" style=\"color:#00F5D4; text-decoration:none;\">{item['title']}</a></h2>"
                 f"<p style='color:#cccccc; font-size:15px; line-height:1.6; margin:0;'>{item['summary']}</p>"
-                f"<hr style='border: none; border-top: 1px solid #333; margin:24px 0;'>"
                 f"</div>"
             )
 
         html_digest = f"""
         <html>
-          <body style="margin:2; padding:0; background:#0f0f0f; font-family:'Segoe UI', Roboto, Arial, sans-serif; color:#ffffff;">
-            <div style="max-width:640px; margin:40px auto; background:#121212; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-
-              <!-- Header with Logo -->
-              <div style="background:#00ffe0; color:#000000; padding:24px 32px; display:flex; align-items:center; gap:16px;">
-                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-                     alt="Logo"
-                     style="height:48px; border-radius:8px;" />
-                <div style="display: flex; flex-direction: column; justify-content: center; gap: 6px;">
-                  <h1 style="
-                    margin: 0;
-                    font-size: 26px;
-                    font-weight: 700;
-                    font-family: 'Segoe UI', sans-serif;
-                    letter-spacing: -0.5px;
-                  ">
-                    Cybersecurity Digest
-                  </h1>
-                  <p style="
-                    margin: 0;
-                    font-size: 14px;
-                    font-weight: 500;
-                    font-family: 'Segoe UI', sans-serif;
-                  ">
-                    {today_str}
-                  </p>
+          <body style=\"margin:0; padding:0; background-color:#121212; font-family:'Segoe UI', sans-serif;\">
+            <div style=\"padding:24px; background-color:#00FFE0; border-top-left-radius:24px; border-top-right-radius:24px;\">
+              <div style=\"display:flex; align-items:center; gap:16px;\">
+                <img src=\"https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/logo.png?raw=true\" alt=\"logo\" width=\"48\" height=\"48\" style=\"border-radius:12px;\" />
+                <div style=\"display:flex; flex-direction:column; justify-content:center; gap:6px;\">
+                  <h1 style=\"margin:0; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;\">Cybersecurity Digest</h1>
+                  <p style=\"margin:0; font-size:14px; font-weight:500; font-family:'Segoe UI', sans-serif;\">{today_str}</p>
                 </div>
               </div>
-
-              <!-- Cyber News -->
-              <div style="background:#1e1e1e; padding:32px;">
-                <h2 style="color:#ffffff; font-size:20px; font-weight:600;">📰 Today’s Cybersecurity Headlines</h2>
-                {html_items}
-              </div>
-
-              <!-- Footer -->
-              <div style="text-align:center; padding:20px 0; font-size:12px; color:#888888;">
-                Stay secure. This digest was sent by your automated cybersecurity agent.<br>
-                <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
-              </div>
-
             </div>
+
+            <div style=\"padding:24px; color:#E0E0E0; background-color:#121212;\">
+              <h3 style=\"color:#FFFFFF; font-size:18px; margin-bottom:24px;\">📰 Today’s Cybersecurity Headlines</h3>
+              {html_items}
+            </div>
+
+            <div style=\"text-align:center; padding:20px 0; font-size:12px; color:#888888;\">
+              Stay secure. This digest was sent by your automated cybersecurity agent.<br>
+              <span style=\"color:#555;\">© {today_str[:4]} Cyber Digest Bot</span>
+            </div>
+
           </body>
         </html>
         """
