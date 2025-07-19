@@ -114,7 +114,9 @@ if __name__ == "__main__":
             </div>
 
             <div style="padding:24px; color:#E0E0E0; background-color:#121212;">
-              <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:12px;">🗂 Quick Headlines</h3>
+              <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:12px; font-size:18px;"> 
+                 🛡 Top Threats Today </h3>
+
               <ul style="padding-left:20px; margin:0; color:#00F5D4; font-size:16px;">{quick_links}</ul>
               <hr style="margin:24px 0; border:0; border-top:1px solid #333;">
               <h3 style="color:#FFFFFF; font-size:18px; margin-bottom:24px;">📚 Deep Dive</h3>
