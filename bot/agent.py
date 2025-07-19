@@ -107,6 +107,10 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
             traceback.print_exc()
             final_title = article['title']
             final_summary_content = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+        
+        # --- ADDED TIME DELAY HERE ---
+        time.sleep(2) # Pause for 2 seconds to respect Gemini API rate limits
+        # -----------------------------
 
         results.append({
             "title": final_title,
@@ -128,7 +132,7 @@ def send_to_telegram(text: str) -> None:
     print("Telegram API response:", r.status_code, r.text[:200])
     r.raise_for_status()
 
-# \u2500\u2500 Main routine \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
     try:
