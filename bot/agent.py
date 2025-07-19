@@ -71,30 +71,43 @@ if __name__ == "__main__":
         # 4) Convert to HTML format
         html_digest = f"""
         <html>
-          <body style="margin:0; padding:0; background:#f4f6f8; font-family:Segoe UI, Roboto, Arial, sans-serif;">
-            <div style="max-width:620px; margin:30px auto; background:#ffffff; border-radius:12px; padding:32px 28px; box-shadow:0 4px 12px rgba(0,0,0,0.07);">
-              
-              <h2 style="margin-top:0; font-size:24px; color:#1a1a1a; border-bottom:1px solid #e0e0e0; padding-bottom:12px;">
-                🕵️ Cybersecurity Digest — {today_str}
-              </h2>
+  <body style="margin:0; padding:0; background:#0f0f0f; font-family:'Segoe UI', Roboto, Arial, sans-serif; color:#ffffff;">
+    <div style="max-width:640px; margin:40px auto; background:#121212; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
 
-              <h3 style="color:#0066cc; font-size:18px; margin:24px 0 12px;">📈 Trending Topics on Twitter</h3>
-              <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.6;">
-                {''.join(f'<li>{t}</li>' for t in twitter_terms)}
-              </ul>
+      <!-- Header -->
+      <div style="background:#00ffe0; color:#000000; padding:24px 32px;">
+        <h1 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.5px;">
+          🕵️ Cybersecurity Digest
+        </h1>
+        <p style="margin:4px 0 0; font-size:14px; font-weight:500;">{today_str}</p>
+      </div>
 
-              <h3 style="color:#0066cc; font-size:18px; margin:28px 0 12px;">📰 Today’s Cybersecurity Headlines</h3>
-              <ul style="padding-left:20px; color:#333333; font-size:16px; line-height:1.75;">
-                {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
-              </ul>
+      <!-- Twitter Trends -->
+      <div style="padding:32px;">
+        <h2 style="color:#00ffe0; font-size:20px; font-weight:600; margin-top:0;">📈 Trending Topics on Twitter</h2>
+        <ul style="padding-left:20px; font-size:16px; line-height:1.8; color:#e0e0e0;">
+          {''.join(f'<li>{t}</li>' for t in twitter_terms)}
+        </ul>
+      </div>
 
-            </div>
+      <!-- Cyber News -->
+      <div style="background:#1e1e1e; padding:32px;">
+        <h2 style="color:#ffffff; font-size:20px; font-weight:600;">📰 Today’s Cybersecurity Headlines</h2>
+        <ul style="padding-left:20px; font-size:16px; line-height:1.8; color:#cccccc;">
+          {''.join(f'<li>{line.lstrip("• ").strip()}</li>' for line in news_block.splitlines() if line.strip())}
+        </ul>
+      </div>
 
-            <div style="max-width:620px; margin:0 auto; text-align:center; padding:12px 0 30px; font-size:12px; color:#888888;">
-              Stay secure. This digest was sent to you by your automated cybersecurity agent.
-            </div>
-          </body>
-        </html>
+      <!-- Footer -->
+      <div style="text-align:center; padding:20px 0; font-size:12px; color:#888888;">
+        Stay secure. This digest was sent by your automated cybersecurity agent.<br>
+        <span style="color:#555;">© {today_str[:4]} Cyber Digest Bot</span>
+      </div>
+
+    </div>
+  </body>
+</html>
+
         """
 
         # 5) Log output
