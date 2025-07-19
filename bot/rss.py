@@ -23,7 +23,7 @@ def extract_image(entry) -> str:
 
     return ""  # fallback
 
-def today_items(max_items: int = 25, hours_back: int = 24) -> List[Dict[str, str]]:
+def today_items(max_items: int = 25, hours_back: int = 48) -> List[Dict[str, str]]:
     """Return recent RSS items with title, summary, link, and image."""
     import datetime
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours_back)
