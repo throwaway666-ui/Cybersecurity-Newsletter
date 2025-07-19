@@ -30,7 +30,8 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
 
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
-            "first write a short, punchy title including appropriate emojis. "
+            "first write a short, punchy title including appropriate emojis, "
+            "Avoid Markdowns."
             "Then, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. "
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
@@ -269,7 +270,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="text-align:center; padding:25px; font-size:12px; color:#888888;">
                                 <p style="margin:0 0 10px; font-size:14px; color:#cccccc;">
-                                    Was this email forwarded to you? <a href="https://github.com/throwaway666-ui/Telegram-Research-Channel" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>.
+                                    W? <a href="https://github.com/throwaway666-ui/Telegram-Research-Channel" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>.
                                 </p>
                                 <p style="margin:0 0 10px;">Stay secure. This digest was sent by your automated cybersecurity agent.</p>
                                 <p style="margin:0; color:#555;">&copy; {today_str[:4]} Cyber Digest Bot. All rights reserved.</p>
