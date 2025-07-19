@@ -1,10 +1,10 @@
 """
-bot/rss.py  –  Collect headlines from the past 24 hours from 3 RSS feeds.
+bot/rss.py  –  Collect headlines and descriptions from the past 24 hours from 3 RSS feeds.
 """
 
 from __future__ import annotations
 import datetime, feedparser
-from typing import List
+from typing import List, Dict
 
 FEEDS = [
     "https://krebsonsecurity.com/feed/",
@@ -12,10 +12,10 @@ FEEDS = [
     "https://securityaffairs.com/feed",
 ]
 
-def today_items(max_items: int = 25, hours_back: int = 24) -> List[str]:
-    """Return headlines from the past `hours_back` hours (default: 24h)."""
+def today_items(max_items: int = 25, hours_back: int = 24) -> List[Dict[str, str]]:
+    """Return a list of dicts: {title, summary} for items in the past `hours_back` hours."""
     cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours_back)
-    titles = []
+    items = []
 
     for url in FEEDS:
         fp = feedparser.parse(url)
@@ -25,11 +25,15 @@ def today_items(max_items: int = 25, hours_back: int = 24) -> List[str]:
                 continue
             entry_dt = datetime.datetime(*stamp[:6], tzinfo=datetime.timezone.utc)
             if entry_dt >= cutoff:
-                titles.append(e.title.strip())
+                title = e.title.strip()
+                summary = getattr(e, "summary", "") or getattr(e, "description", "")
+                items.append({"title": title, "summary": summary.strip()})
 
-    # Deduplicate while preserving order
+    # Deduplicate by title while preserving order
     seen, unique = set(), []
-    for t in titles:
-        if t not in seen:
-            seen.add(t); unique.append(t)
+    for item in items:
+        if item["title"] not in seen:
+            seen.add(item["title"])
+            unique.append(item)
+
     return unique[:max_items]
