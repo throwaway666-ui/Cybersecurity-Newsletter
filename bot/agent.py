@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os, datetime, requests, sys, traceback, time
 import google.generativeai as genai
+import re # Added to support re.sub for plain text digest
 
 from rss import today_items
 from send_email import send_html_email # custom Gmail sender
@@ -12,7 +13,7 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
 
-def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bullets default to 5
+def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
     """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
         return "• No fresh cybersecurity headlines found in the last\u202f24h."
@@ -34,7 +35,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
-            f"Description: {article['summary']}" # Use the plain text summary for the prompt
+            f"Description: {article['summary']}"
         )
 
         try:
@@ -42,27 +43,24 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
             generated_content = response.text.strip()
 
             lines = generated_content.splitlines()
-            final_title = article['title'] # Default fallback to original title
-            rundown_text = "" # Will store the "The Rundown:" sentence
-            details_html = "" # Will store the "The details:" bullet points
+            final_title = article['title']
+            rundown_text = ""
+            details_html = ""
 
             if lines:
-                # 1. Parse Title: Be more robust, remove "Title:" prefix if present
                 potential_title = lines[0].strip()
                 if potential_title.lower().startswith("title:"):
                     final_title = potential_title[len("title:"):].strip()
                 elif potential_title:
                     final_title = potential_title
 
-                # 2. Parse "Rundown" and "Details"
-                content_lines = lines[1:] # All lines after the title
+                content_lines = lines[1:]
 
-                # Try to find a good "rundown" sentence (first non-bullet, non-empty line)
                 for i, line in enumerate(content_lines):
                     stripped_line = line.strip()
                     if stripped_line and not (stripped_line.startswith('*') or stripped_line.startswith('-')):
                         rundown_text = stripped_line
-                        content_lines = content_lines[i+1:] # Remaining lines for bullets
+                        content_lines = content_lines[i+1:]
                         break
 
                 bullet_points = []
@@ -78,21 +76,16 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
                     ])
                     if bullet_points_html_content:
                         details_html = f"<ul style='padding-left:20px; margin:0; list-style-type:disc; color:#cccccc; font-size:15px; line-height:1.6;'>{bullet_points_html_content}</ul>"
-                
-                # If no bullets were successfully parsed, fallback for details
-                if not details_html:
-                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>" # Use original plain summary as paragraph
 
-                # If no rundown text, use beginning of original plain summary
+                if not details_html:
+                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
+
                 if not rundown_text:
                     rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
-                    if len(rundown_text) > 150: # Cap for conciseness
+                    if len(rundown_text) > 150:
                         rundown_text = rundown_text[:150] + '...'
 
-            # Assemble the final HTML for the summary section
-            # If AI didn't provide good content, fall back to original HTML content or plain summary as a single paragraph
             if not rundown_text and not details_html:
-                # Fallback to the original HTML content if AI generation was poor
                 final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
                 final_summary_content = (
@@ -105,16 +98,16 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bull
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
             final_title = article['title']
-            # On error, fallback to original HTML content or plain summary
             final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
             
-        time.sleep(60) # Pause for 60 seconds to respect Gemini API rate limits
+        # Removed the time.sleep(60) call here
+        # time.sleep(60) # This line has been removed
 
         results.append({
             "title": final_title,
-            "summary_content_html": final_summary_content, # Store the full HTML block
+            "summary_content_html": final_summary_content,
             "link": article['link'],
-            "image_url": article.get("image_url", "") # Pass through the image_url
+            "image_url": article.get("image_url", "")
         })
 
     return results
@@ -136,7 +129,7 @@ if __name__ == "__main__":
     try:
         raw_articles = today_items(max_items=25)
         print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}")
-        summaries = summarise_rss(raw_articles, bullets=5) # Changed bullets to 5 here
+        summaries = summarise_rss(raw_articles, bullets=5)
         print(f"DEBUG: Number of summaries generated: {len(summaries)}")
         today_str = datetime.date.today().strftime("%d %b %Y")
 
@@ -160,14 +153,14 @@ if __name__ == "__main__":
         for item in summaries:
             # Add image if available
             image_html = ""
-            if item.get('image_url'): # Check if image_url exists and is not empty
+            if item.get('image_url'):
                 image_html = f"<img src=\"{item['image_url']}\" alt=\"{item['title']}\" style=\"width:100%; max-width:550px; height:auto; display:block; margin:0 auto 20px; border-radius:8px; object-fit:cover;\">"
 
             html_items += (
                 f"<div style='margin-bottom:30px; padding:25px; border-radius:12px; background-color:#1E1E1E; box-shadow:0 6px 15px rgba(0,255,224,0.1);'>"
                 + f"<h2 style='font-size:22px; color:#00F5D4; font-weight:700; margin:0 0 15px; line-height:1.3;'>{item['title']}</h2>"
-                + image_html + # Insert image here
-                f"{item['summary_content_html']}" # Use the pre-formatted HTML content here
+                + image_html +
+                f"{item['summary_content_html']}"
                 f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; margin-top:20px; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
                 f"</div>"
             )
@@ -226,7 +219,7 @@ if __name__ == "__main__":
                     h1, h2, h3 {{
                         color: #00F5D4 !important;
                     }}
-                    p, li, span {{ /* Add span here for rundown text */
+                    p, li, span {{
                         color: #cccccc !important;
                     }}
                 }}
