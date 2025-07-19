@@ -67,9 +67,9 @@ if __name__ == "__main__":
         # 1) Fetch RSS articles
         raw_articles = today_items(max_items=25)
         summaries = summarise_rss(raw_articles, bullets=8)
+        today_str = datetime.date.today().strftime("%d %b %Y")
 
         # 2) Assemble plain-text
-        today_str = datetime.date.today().strftime("%d %b %Y")
         news_block = "\n\n".join([f"{item['title']}\n{item['summary']}\n{item['link']}" for item in summaries])
         digest = f"🕵‍♂️ Cybersecurity Digest — {today_str}\n\n{news_block}"
 
@@ -88,15 +88,32 @@ if __name__ == "__main__":
 
         html_digest = f"""
         <html>
-          <body style="margin:0; padding:0; background:#0f0f0f; font-family:'Segoe UI', Roboto, Arial, sans-serif; color:#ffffff;">
+          <body style="margin:2; padding:0; background:#0f0f0f; font-family:'Segoe UI', Roboto, Arial, sans-serif; color:#ffffff;">
             <div style="max-width:640px; margin:40px auto; background:#121212; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
 
               <!-- Header with Logo -->
               <div style="background:#00ffe0; color:#000000; padding:24px 32px; display:flex; align-items:center; gap:16px;">
-                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png" alt="Logo" style="height:48px; border-radius:8px; display:block;" />
-                <div style="line-height:1.1; margin-top:-4px;">
-                  <h1 style="margin:0; font-size:26px; font-weight:700; font-family:'Segoe UI', sans-serif; letter-spacing:-0.5px;">Cybersecurity Digest</h1>
-                  <p style="margin:4px 0 0; font-size:14px; font-weight:500; font-family:'Segoe UI', sans-serif;">{today_str}</p>
+                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
+                     alt="Logo"
+                     style="height:48px; border-radius:8px;" />
+                <div style="display: flex; flex-direction: column; justify-content: center; gap: 6px;">
+                  <h1 style="
+                    margin: 0;
+                    font-size: 26px;
+                    font-weight: 700;
+                    font-family: 'Segoe UI', sans-serif;
+                    letter-spacing: -0.5px;
+                  ">
+                    Cybersecurity Digest
+                  </h1>
+                  <p style="
+                    margin: 0;
+                    font-size: 14px;
+                    font-weight: 500;
+                    font-family: 'Segoe UI', sans-serif;
+                  ">
+                    {today_str}
+                  </p>
                 </div>
               </div>
 
