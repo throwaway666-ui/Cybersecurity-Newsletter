@@ -12,7 +12,7 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
 
-def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
+def summarise_rss(articles: list[dict], bullets: int = 5) -> str: # Changed bullets default to 5
     """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
         return "• No fresh cybersecurity headlines found in the last\u202f24h."
@@ -108,9 +108,7 @@ def summarise_rss(articles: list[dict], bullets: int = 8) -> str:
             final_title = article['title']
             final_summary_content = f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
         
-        # --- ADDED TIME DELAY HERE ---
-        time.sleep(2) # Pause for 2 seconds to respect Gemini API rate limits
-        # -----------------------------
+        time.sleep(60) # Pause for 60 seconds to respect Gemini API rate limits
 
         results.append({
             "title": final_title,
@@ -137,9 +135,9 @@ if __name__ == "__main__":
     t0 = time.time()
     try:
         raw_articles = today_items(max_items=25)
-        print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}") # <--- ADDED LINE
-        summaries = summarise_rss(raw_articles, bullets=8)
-        print(f"DEBUG: Number of summaries generated: {len(summaries)}") # <--- ADDED LINE
+        print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}")
+        summaries = summarise_rss(raw_articles, bullets=5) # Changed bullets to 5 here
+        print(f"DEBUG: Number of summaries generated: {len(summaries)}")
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # --- Plain-text digest for Telegram (adapted to new structure) ---
@@ -161,7 +159,6 @@ if __name__ == "__main__":
         for item in summaries:
             html_items += (
                 f"<div style='margin-bottom:30px; padding:25px; border-radius:12px; background-color:#1E1E1E; box-shadow:0 6px 15px rgba(0,255,224,0.1);'>"
-                # Image removed here
                 + f"<h2 style='font-size:22px; color:#00F5D4; font-weight:700; margin:0 0 15px; line-height:1.3;'>{item['title']}</h2>"
                 f"{item['summary_content_html']}" # <--- Use the pre-formatted HTML content here
                 f"<a href=\"{item['link']}\" target=\"_blank\" style=\"display:inline-block; margin-top:20px; padding:12px 25px; background-color:#00FFE0; color:#121212; text-decoration:none; border-radius:8px; font-weight:bold; font-size:15px; transition:background-color 0.3s ease;\">Read More &gt;</a>"
