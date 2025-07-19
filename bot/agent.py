@@ -268,6 +268,9 @@ if __name__ == "__main__":
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#121212; border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
                         <tr>
                             <td style="text-align:center; padding:25px; font-size:12px; color:#888888;">
+                                <p style="margin:0 0 10px; font-size:14px; color:#cccccc;">
+                                    Was this email forwarded to you? <a href="YOUR_SIGNUP_LINK_HERE" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>.
+                                </p>
                                 <p style="margin:0 0 10px;">Stay secure. This digest was sent by your automated cybersecurity agent.</p>
                                 <p style="margin:0; color:#555;">&copy; {today_str[:4]} Cyber Digest Bot. All rights reserved.</p>
                                 <p style="margin-top:15px;"><a href="#" style="color:#00FFE0; text-decoration:underline; font-size:11px;">Unsubscribe</a></p>
