@@ -270,7 +270,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="text-align:center; padding:25px; font-size:12px; color:#888888;">
                                 <p style="margin:0 0 10px; font-size:14px; color:#cccccc;">
-                                    W? <a href="https://github.com/throwaway666-ui/Telegram-Research-Channel" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>.
+                                    Was this email forwarded to you? <a href="https://github.com/throwaway666-ui/Telegram-Research-Channel" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>.
                                 </p>
                                 <p style="margin:0 0 10px;">Stay secure. This digest was sent by your automated cybersecurity agent.</p>
                                 <p style="margin:0; color:#555;">&copy; {today_str[:4]} Cyber Digest Bot. All rights reserved.</p>
