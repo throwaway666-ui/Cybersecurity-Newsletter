@@ -122,7 +122,7 @@ def send_to_telegram(text: str) -> None:
     }
     r = requests.post(url, json=payload, timeout=15)
     print("Telegram API response:", r.status_code, r.text[:200])
-    r.raise_for_status()
+    r.raise_for_status() # Corrected this line
 
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -206,8 +206,8 @@ if __name__ == "__main__":
                         color: #E0E0E0 !important;
                     }}
                     .header-bg {{
-                        background-color: #00FFE0 !important;
-                        color: #000 !important;
+                        background-color: #d71921 !important; /* Updated to red */
+                        color: #fff !important; /* Text color for dark mode header */
                     }}
                     .content-block {{ /* New style for content blocks */
                         background-color: #121212 !important; /* Adjust if blocks should be lighter */
@@ -234,23 +234,23 @@ if __name__ == "__main__":
         <body style="margin:0; padding:0; background-color:#0d0d0d;">
             <center style="width:100%; background-color:#0d0d0d;">
                 <div style="max-width:700px; margin:0 auto;" class="email-container">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; padding:20px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#D71921; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                         <tr>
-                            <td style="padding: 20px 25px; text-align: left; display:flex; align-items:center; justify-content:space-between;">
-                                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/logo.png"
-                                    alt="logo" width="48" height="48" style="border-radius:10px; flex-shrink:0; vertical-align:middle;" />
-                                <div style="text-align:right;">
-                                    <h1 style="margin:0; font-size:24px; font-weight:800; color:#000; letter-spacing:-0.5px;">
-                                        Cybersecurity Digest
-                                    </h1>
-                                    <span style="font-size:14px; font-weight:600; color:#333;">{today_str}</span>
-                                </div>
+                            <td style="text-align:center; padding:25px 25px 20px;">
+                                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/therundown-logo-white.png"
+                                    alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center; padding:0 25px 25px;">
+                                <span style="font-family:'Arial Black', Gadget, sans-serif; font-size:16px; font-weight:bold; color:#fff;">{today_str}</span>
                             </td>
                         </tr>
                     </table>
-
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;"> <tr>
-                            <td style="padding: 0 25px;"> <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;"> 
+                        <tr>
+                            <td style="padding: 0 25px;"> 
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
                                     <tr>
                                         <td style="padding: 25px;">
                                             <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
