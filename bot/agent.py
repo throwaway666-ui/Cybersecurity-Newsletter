@@ -122,7 +122,7 @@ def send_to_telegram(text: str) -> None:
     }
     r = requests.post(url, json=payload, timeout=15)
     print("Telegram API response:", r.status_code, r.text[:200])
-    r.raise_for_status() # Corrected this line
+    r.raise_for_status()
 
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -206,8 +206,8 @@ if __name__ == "__main__":
                         color: #E0E0E0 !important;
                     }}
                     .header-bg {{
-                        background-color: #d71921 !important; /* Updated to red */
-                        color: #fff !important; /* Text color for dark mode header */
+                        background-color: #00FFE0 !important; /* Teal for dark mode */
+                        color: #000 !important; /* Black text for dark mode header */
                     }}
                     .content-block {{ /* New style for content blocks */
                         background-color: #121212 !important; /* Adjust if blocks should be lighter */
@@ -234,16 +234,16 @@ if __name__ == "__main__":
         <body style="margin:0; padding:0; background-color:#0d0d0d;">
             <center style="width:100%; background-color:#0d0d0d;">
                 <div style="max-width:700px; margin:0 auto;" class="email-container">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#D71921; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
-                            <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/cybersecurity%20logo.png?raw=true"
-                               alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />    
+                                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/cybersecurity%20logo.png?raw=true"
+                                    alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align:center; padding:0 25px 25px;">
-                                <span style="font-family:'Arial Black', Gadget, sans-serif; font-size:16px; font-weight:bold; color:#fff;">{today_str}</span>
+                                <span style="font-family:'Arial Black', Gadget, sans-serif; font-size:16px; font-weight:bold; color:#333;">{today_str}</span>
                             </td>
                         </tr>
                     </table>
