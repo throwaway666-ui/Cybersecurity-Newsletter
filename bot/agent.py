@@ -122,7 +122,7 @@ def send_to_telegram(text: str) -> None:
     }
     r = requests.post(url, json=payload, timeout=15)
     print("Telegram API response:", r.status_code, r.text[:200])
-    r.raise_for_status()
+    r.raise_or_status()
 
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -209,6 +209,11 @@ if __name__ == "__main__":
                         background-color: #00FFE0 !important;
                         color: #000 !important;
                     }}
+                    .content-block {{ /* New style for content blocks */
+                        background-color: #121212 !important; /* Adjust if blocks should be lighter */
+                        border: 1px solid #333333 !important;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+                    }}
                     .card {{
                         background-color: #1E1E1E !important;
                         box-shadow: 0 6px 15px rgba(0,255,224,0.1) !important;
@@ -244,24 +249,29 @@ if __name__ == "__main__":
                         </tr>
                     </table>
 
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#121212; padding:25px;">
-                        <tr>
-                            <td style="padding: 25px 25px 0;">
-                                <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
-                                    🛡️ Quick Shields
-                                </h3>
-                                <ul style="padding-left:25px; margin:0; color:#00F5D4; font-size:16px; line-height:1.8;">{quick_links}</ul>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;"> <tr>
+                            <td style="padding: 0 25px;"> <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
+                                    <tr>
+                                        <td style="padding: 25px;">
+                                            <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
+                                                🛡️ Quick Shields
+                                            </h3>
+                                            <ul style="padding-left:25px; margin:0; color:#00F5D4; font-size:16px; line-height:1.8;">{quick_links}</ul>
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding: 25px 25px;">
-                                <hr style="margin:0; border:0; border-top:1px solid #333333; opacity:0.6;">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 25px 25px;">
-                                <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Today's Stories</h3>
-                                {html_items}
+                            <td style="padding: 0 25px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                                    <tr>
+                                        <td style="padding: 25px;">
+                                            <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Today's Stories</h3>
+                                            {html_items}
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
