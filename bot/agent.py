@@ -228,7 +228,7 @@ if __name__ == "__main__":
         </head>
         <body style="margin:0; padding:0; background-color:#0d0d0d;">
             <center style="width:100%; background-color:#0d0d0d;">
-                <div style="max-width:850px; margin:0 auto;" class="email-container">
+                <div style="max-width:700px; margin:0 auto;" class="email-container">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; padding:20px;">
                         <tr>
                             <td style="padding: 20px 25px; text-align: left; display:flex; align-items:center; justify-content:space-between;">
