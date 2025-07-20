@@ -122,7 +122,7 @@ def send_to_telegram(text: str) -> None:
     }
     r = requests.post(url, json=payload, timeout=15)
     print("Telegram API response:", r.status_code, r.text[:200])
-    r.raise_or_status()
+    r.raise_for_status()
 
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
