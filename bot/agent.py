@@ -90,7 +90,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
                 final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
                 final_summary_content = (
-                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Rundown: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
+                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Radar: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
                     f"{details_html}"
                 )
