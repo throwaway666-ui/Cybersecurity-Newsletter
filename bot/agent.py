@@ -17,7 +17,7 @@ def generate_welcome_message(articles: list[dict]) -> str:
     if not articles:
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
-    genai.configure(api_key=GENAI_API_KEY)
+    genai.configure(api_api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     # Combine titles and summaries for the prompt
@@ -65,7 +65,8 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             "You are a cybersecurity editor. For the following news article, "
             "first write a short, punchy title including appropriate emojis, "
             "Avoid Markdowns."
-            "Then, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. "
+            "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. " # <--- NEW LINE: Explicitly asking for "The Radar" sentence
+            "Finally, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. " # <--- MODIFIED LINE
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
@@ -76,49 +77,68 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             response = model.generate_content(prompt)
             generated_content = response.text.strip()
 
-            lines = generated_content.splitlines()
+            lines = [line.strip() for line in generated_content.splitlines() if line.strip()] # Clean up empty lines
             final_title = article['title']
             rundown_text = ""
             details_html = ""
+            bullet_points = []
+            content_start_index = 0 # To track where content (radar/bullets) begins
 
             if lines:
-                potential_title = lines[0].strip()
+                # Attempt to extract title from the first line
+                potential_title = lines[0]
                 if potential_title.lower().startswith("title:"):
                     final_title = potential_title[len("title:"):].strip()
-                elif potential_title:
+                    content_start_index = 1
+                elif potential_title and (potential_title.count(' ') < 10 and not (potential_title.startswith('*') or potential_title.startswith('-'))):
+                    # Heuristic: if first line is short and not a bullet, assume it's the title
                     final_title = potential_title
+                    content_start_index = 1
+                # If content_start_index is still 0, it means the first line was not recognized as a title,
+                # so we start parsing for radar/bullets from the very beginning of lines.
 
-                content_lines = lines[1:]
-
-                for i, line in enumerate(content_lines):
-                    stripped_line = line.strip()
-                    if stripped_line and not (stripped_line.startswith('*') or stripped_line.startswith('-')):
-                        rundown_text = stripped_line
-                        content_lines = content_lines[i+1:]
+                # Try to find the rundown text (first non-bullet point line after potential title)
+                radar_found = False
+                for i in range(content_start_index, len(lines)):
+                    line = lines[i]
+                    if not (line.startswith('*') or line.startswith('-')) and len(line) > 10: # Assume it's rundown if not a bullet and long enough
+                        rundown_text = line
+                        content_start_index = i + 1 # Start looking for bullets after this
+                        radar_found = True
                         break
+                # If no explicit rundown found, it might be implicitly part of the content starting from content_start_index
+                # We'll rely on the original summary for rundown_text if AI doesn't provide it clearly.
 
-                bullet_points = []
-                for line in content_lines:
-                    stripped_line = line.strip()
-                    if stripped_line and (stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10):
+                # Collect bullet points from where content_start_index left off
+                for i in range(content_start_index, len(lines)):
+                    stripped_line = lines[i]
+                    if stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10:
                         bullet_points.append(stripped_line.strip('* ').strip('- ').strip())
 
-                if bullet_points:
-                    bullet_points_html_content = "".join([
-                        f"<li style='margin-bottom:8px;'>{bp}</li>"
-                        for bp in bullet_points if bp
-                    ])
-                    if bullet_points_html_content:
-                        details_html = f"<ul style='padding-left:20px; margin:0; list-style-type:disc; color:#cccccc; font-size:15px; line-height:1.6;'>{bullet_points_html_content}</ul>"
+            # Construct HTML for bullet points
+            if bullet_points:
+                bullet_points_html_content = "".join([
+                    f"<li style='margin-bottom:8px;'>{bp}</li>"
+                    for bp in bullet_points if bp
+                ])
+                if bullet_points_html_content:
+                    details_html = f"<ul style='padding-left:20px; margin:0; list-style-type:disc; color:#cccccc; font-size:15px; line-height:1.6;'>{bullet_points_html_content}</ul>"
 
-                if not details_html:
-                    details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
+            # Fallback for details_html if no bullets generated by AI
+            if not details_html:
+                details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
 
-                if not rundown_text:
-                    rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
-                    if len(rundown_text) > 150:
-                        rundown_text = rundown_text[:150] + '...'
+            # Fallback for rundown_text if AI didn't provide it clearly.
+            # No aggressive truncation here, let it be full first sentence if used.
+            if not rundown_text:
+                rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
+                # Optional: You can still add a soft truncation for radar if the first sentence is excessively long
+                # but aim for completeness here.
+                if len(rundown_text) > 200 and not radar_found: # Only truncate if AI didn't generate one AND it's too long
+                    rundown_text = rundown_text[:200] + '...'
 
+
+            # Construct the final summary content HTML
             if not rundown_text and not details_html:
                 final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
@@ -132,6 +152,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
             final_title = article['title']
+            # Fallback to original summary in case of any AI generation error
             final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
 
         results.append({
@@ -259,9 +280,9 @@ if __name__ == "__main__":
                             </td>
                         </tr>
                     </table>
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;"> 
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;">
                         <tr>
-                            <td style="padding: 0 25px;"> 
+                            <td style="padding: 0 25px;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
                                     <tr>
                                         <td style="padding: 25px;">
