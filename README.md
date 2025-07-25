@@ -192,7 +192,6 @@ Contributions are welcome! If you have suggestions for improvements, new feature
 ## License
 
 This project is licensed under the MIT License - see the `LICENSE` file for details.
-*(Note: You'll need to create a `LICENSE` file in your repository if you haven't already.)*
 
 ## Contact
 
