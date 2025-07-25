@@ -234,7 +234,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             "link": article['link'],
             "image_url": article.get("image_url", ""),
             "rundown_text": rundown_text,
-            "summary": article['summary'] # This is crucial for generate_email_headline's fallback
+            "summary": article['summary']
         })
 
     return results
@@ -247,9 +247,6 @@ if __name__ == "__main__":
         print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}")
 
         # NEW: Deduplicate articles based on content similarity
-        # You can adjust the similarity_threshold (0.0 to 1.0) as needed.
-        # Higher threshold means stricter matching (fewer duplicates removed).
-        # Lower threshold means looser matching (more potential duplicates removed).
         processed_articles = deduplicate_articles(raw_articles, similarity_threshold=0.7)
         print(f"DEBUG: Number of deduplicated articles: {len(processed_articles)}")
 
@@ -259,7 +256,6 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # Define the logo URL (using raw.githubusercontent.com as requested)
-        # Note: While this is better than 'blob' links, always test thoroughly across email clients
         logo_url = "https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/digest.png"
 
         # Generate the dynamic email headline
@@ -363,7 +359,13 @@ if __name__ == "__main__":
                         </tr>
                         <tr>
                             <td style="text-align:center; padding:0 25px 25px;">
-                                <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">{today_str}</span>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="background-color:#000; border-radius: 8px;">
+                                    <tr>
+                                        <td style="padding: 5px 15px;">
+                                            <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF;">{today_str}</span>
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
