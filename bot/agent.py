@@ -33,7 +33,7 @@ def generate_welcome_message(articles: list[dict]) -> str:
         "Based on the following cybersecurity news articles, write a **very short (2-3 sentences)**, "
         "engaging, and thought-provoking welcome paragraph for a daily cybersecurity digest. "
         "It should introduce the themes of today's news without being a summary itself. "
-        "Use appropriate emojis. Avoid Markdown formatting for the welcome message.\n\n"
+        "Use appropriate emojis only at the start of each title . Avoid Markdown formatting for the welcome message.\n\n"
         "Here are today's headlines and summaries:\n"
         f"{news_context}"
         "Welcome message:"
