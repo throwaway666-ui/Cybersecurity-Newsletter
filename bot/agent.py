@@ -1,12 +1,3 @@
-Okay, I understand you want the *entire, corrected code* with the most recent prompt changes, the `api_key` fix, and the `gemini-2.5-flash` model as you've set it, while *insisting* on using the GitHub `blob?raw=true` URL for your logo.
-
-Here is the **finalized, consolidated code**.
-
-**Please be aware:** While I've included the GitHub `blob?raw=true` URL for your logo as requested, **it's highly likely to remain unreliable for email display.** Email clients often block images from these types of URLs due to security and content delivery practices. For reliable image display, hosting on GitHub Pages or a dedicated CDN is still the industry best practice.
-
------
-
-```python
 from __future__ import annotations # This must be the very first line of the file!
 import os, datetime, sys, traceback, time
 import google.generativeai as genai
