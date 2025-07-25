@@ -392,7 +392,7 @@ if __name__ == "__main__":
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                                     <tr>
                                         <td style="padding: 25px;">
-                                            <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Today's Stories</h3>
+                                            <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">💻 Today's Stories</h3>
                                             {html_items}
                                         </td>
                                     </tr>
