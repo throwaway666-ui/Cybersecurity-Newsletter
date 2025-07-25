@@ -66,9 +66,10 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
 
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
-            "first write a short, punchy title including appropriate emojis only at the beginning, "
+            "first write a short, punchy title including appropriate emojis, "
             "Avoid Markdowns."
             "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. "
+            "Add emojis only at the beginning of the title"
             "Finally, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. "
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
