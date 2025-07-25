@@ -1,4 +1,4 @@
-# ✨ Daily Cybersecurity Digest
+# ✨ Cybersecurity Newsletter
 
 ## Description
 
