@@ -16,7 +16,7 @@ This project automates the daily generation and delivery of a cybersecurity dige
 
 * **AI-Powered Summarization**: Utilizes Google Generative AI (Gemini) to generate engaging welcome messages, dynamic email subject lines, and concise, bullet-point summaries for each article.
 
-* **Flexible Delivery**: Supports delivery via multiple channels, including Telegram (though not explicitly shown in `agent.py`'s current output, it's implied by `TG_TOKEN` and `TG_CHAT_ID` env vars) and Email (Gmail).
+* **Flexible Delivery**: Supports delivery via multiple channels, including Telegram (though not explicitly shown in `agent.py`'s current output) and Email (Gmail).
 
 ## Getting Started
 
@@ -35,11 +35,9 @@ To set up and run this daily digest workflow, follow these steps:
 1.  **Clone the repository:**
 
     ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/throwaway666-ui/Cybersecurity-Newsletter.git)
     cd your-repo-name
     ```
-
-    *(Replace `your-username/your-repo-name` with your actual GitHub repository path)*
 
 2.  **Install Python dependencies:**
     The workflow automatically installs dependencies, but for local development or testing, you can install them manually:
@@ -60,12 +58,6 @@ To set up and run this daily digest workflow, follow these steps:
 ### Configuration
 
 This workflow relies heavily on GitHub Secrets to securely store sensitive API keys and credentials. You **must** add the following secrets to your GitHub repository settings (`Settings > Secrets and variables > Actions > New repository secret`):
-
-* `TG_TOKEN`: Your Telegram Bot API Token.
-
-* `TG_CHAT_ID`: The chat ID where the Telegram digest should be sent.
-
-* `TWITTERAPI_KEY`: Your Twitter API Key (for content fetching, if applicable).
 
 * `GENAI_API_KEY`: Your Google Generative AI API Key (for AI agent functionalities).
 
