@@ -1,6 +1,7 @@
-from __future__ import annotations # This MUST be the very first line of the file!
+from __future__ import annotations # This must be the very first line of the file!
 import os, datetime, sys, traceback, time
 import google.generativeai as genai
+import re # Added for text normalization in deduplication
 
 from rss import today_items
 from send_email import send_html_email # custom Gmail sender
@@ -10,6 +11,60 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
 
+# ── New Deduplication Functions ────────────────────────────────────
+
+def tokenize_and_normalize(text: str) -> set[str]:
+    """
+    Tokenizes text, converts to lowercase, removes punctuation, and returns a set of unique words.
+    """
+    # Remove non-alphanumeric characters (keep spaces) and convert to lowercase
+    text = re.sub(r'[^\w\s]', '', text).lower()
+    # Split into words and filter out empty strings
+    tokens = set(word for word in text.split() if word)
+    return tokens
+
+def jaccard_similarity(set1: set[str], set2: set[str]) -> float:
+    """
+    Calculates the Jaccard similarity between two sets.
+    """
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    if union == 0:
+        return 0.0 # Avoid division by zero if both sets are empty
+    return intersection / union
+
+def deduplicate_articles(articles: list[dict], similarity_threshold: float = 0.7) -> list[dict]:
+    """
+    Deduplicates a list of articles based on Jaccard similarity of their combined title and summary.
+    Articles are compared against those already accepted into the deduplicated list.
+    """
+    deduplicated_articles = []
+    processed_article_signatures = [] # Stores (original_article_index, normalized_tokens_set) for comparison
+
+    for i, current_article in enumerate(articles):
+        current_text = current_article.get('title', '') + " " + current_article.get('summary', '')
+        current_tokens = tokenize_and_normalize(current_text)
+
+        is_duplicate = False
+        for existing_article_idx, existing_tokens in processed_article_signatures:
+            similarity = jaccard_similarity(current_tokens, existing_tokens)
+            if similarity >= similarity_threshold:
+                # Optional: Uncomment the lines below for debugging to see which articles are skipped
+                # print(f"DEBUG: Skipping potential duplicate (Similarity {similarity:.2f}):")
+                # print(f"  Existing: {articles[existing_article_idx].get('title', '')}")
+                # print(f"  Current: {current_article.get('title', '')}")
+                is_duplicate = True
+                break
+
+        if not is_duplicate:
+            deduplicated_articles.append(current_article)
+            # Store the index of the original article for reference if needed, and its token set
+            processed_article_signatures.append((i, current_tokens))
+
+    return deduplicated_articles
+
+# ── AI Generation Functions ────────────────────────────────────────
+
 def generate_welcome_message(articles: list[dict]) -> str:
     """
     Use Gemini to generate a short, engaging welcome message based on the day's cybersecurity news.
@@ -18,10 +73,8 @@ def generate_welcome_message(articles: list[dict]) -> str:
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
     genai.configure(api_key=GENAI_API_KEY)
-    # Using 'gemini-2.5-flash' for welcome messages as per your last update
     model = genai.GenerativeModel("gemini-2.5-flash")
 
-    # Combine titles and summaries for the prompt
     news_context = ""
     for article in articles[:5]: # Use top 5 articles for context
         news_context += f"Title: {article['title']}\nSummary: {article['summary']}\n\n"
@@ -46,14 +99,51 @@ def generate_welcome_message(articles: list[dict]) -> str:
         traceback.print_exc()
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
+def generate_email_headline(articles: list[dict], today_str: str) -> str:
+    """
+    Use Gemini to pick the most relevant headline and craft an engaging email subject line.
+    """
+    if not articles:
+        return f"🕵️ Cybersecurity Digest — {today_str}" # Fallback to generic if no articles
+
+    genai.configure(api_key=GENAI_API_KEY)
+    model = genai.GenerativeModel("gemini-2.5-flash")
+
+    context_for_headline = ""
+    for article in articles[:3]: # Focus on the top 3 articles for headline relevance
+        context_for_headline += f"- {article['title']} (Radar: {article.get('rundown_text', article['summary'])})\n"
+
+    prompt = (
+        "You are a cybersecurity marketing expert specializing in email newsletters. "
+        "Based on the following top cybersecurity news for today, craft a **single, punchy, click-worthy email subject line**. "
+        "It should be highly relevant to the most impactful or urgent news, ideally including **one relevant emoji at the beginning**. "
+        "Keep it concise (under 80 characters). Avoid generic phrases like 'Daily Digest' unless absolutely necessary. "
+        "Focus on grabbing attention and hinting at the most significant cybersecurity development."
+        f"\n\nToday's top stories for consideration:\n{context_for_headline}"
+        f"\nEmail Subject for {today_str}:"
+    )
+
+    try:
+        response = model.generate_content(prompt)
+        headline = response.text.strip()
+        if headline.startswith('"') and headline.endswith('"'):
+            headline = headline[1:-1]
+        if len(headline) > 80:
+            headline = headline[:77] + "..."
+        return headline if headline else f"🕵️ Cybersecurity Digest — {today_str}"
+    except Exception as e:
+        print(f"Error generating email headline: {e}")
+        traceback.print_exc()
+        return f"🕵️ Cybersecurity Digest — {today_str}"
+
 
 def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
     """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
-        return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#"}]
+        return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#", "rundown_text": "No fresh cybersecurity headlines found in the last 24h."}]
 
     genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-pro") # Using gemini-2.5-pro for summarization
+    model = genai.GenerativeModel("gemini-2.5-pro")
 
     results = []
     for article in articles[:bullets]:
@@ -79,43 +169,36 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             response = model.generate_content(prompt)
             generated_content = response.text.strip()
 
-            lines = [line.strip() for line in generated_content.splitlines() if line.strip()] # Clean up empty lines
+            lines = [line.strip() for line in generated_content.splitlines() if line.strip()]
             final_title = article['title']
             rundown_text = ""
             details_html = ""
             bullet_points = []
-            content_start_index = 0 # To track where content (radar/bullets) begins
+            content_start_index = 0
 
             if lines:
-                # Attempt to extract title from the first line
                 potential_title = lines[0]
                 if potential_title.lower().startswith("title:"):
                     final_title = potential_title[len("title:"):].strip()
                     content_start_index = 1
                 elif potential_title and (potential_title.count(' ') < 10 and not (potential_title.startswith('*') or potential_title.startswith('-'))):
-                    # Heuristic: if first line is short and not a bullet, assume it's the title
                     final_title = potential_title
                     content_start_index = 1
-                # If content_start_index is still 0, it means the first line was not recognized as a title,
-                # so we start parsing for radar/bullets from the very beginning of lines.
 
-                # Try to find the rundown text (first non-bullet point line after potential title)
                 radar_found = False
                 for i in range(content_start_index, len(lines)):
                     line = lines[i]
-                    if not (line.startswith('*') or line.startswith('-')) and len(line) > 10: # Assume it's rundown if not a bullet and long enough
+                    if not (line.startswith('*') or line.startswith('-')) and len(line) > 10:
                         rundown_text = line
-                        content_start_index = i + 1 # Start looking for bullets after this
+                        content_start_index = i + 1
                         radar_found = True
                         break
 
-                # Collect bullet points from where content_start_index left off
                 for i in range(content_start_index, len(lines)):
                     stripped_line = lines[i]
                     if stripped_line.startswith('*') or stripped_line.startswith('-') or len(stripped_line) > 10:
                         bullet_points.append(stripped_line.strip('* ').strip('- ').strip())
 
-            # Construct HTML for bullet points
             if bullet_points:
                 bullet_points_html_content = "".join([
                     f"<li style='margin-bottom:8px;'>{bp}</li>"
@@ -124,40 +207,33 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
                 if bullet_points_html_content:
                     details_html = f"<ul style='padding-left:20px; margin:0; list-style-type:disc; color:#cccccc; font-size:15px; line-height:1.6;'>{bullet_points_html_content}</ul>"
 
-            # Fallback for details_html if no bullets generated by AI
             if not details_html:
                 details_html = f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
 
-            # Fallback for rundown_text if AI didn't provide it clearly.
             if not rundown_text:
                 rundown_text = article['summary'].split('.')[0] + '.' if '.' in article['summary'] else article['summary']
-                if len(rundown_text) > 200 and not radar_found: # Only truncate if AI didn't generate one AND it's too long
+                if len(rundown_text) > 200 and not radar_found:
                     rundown_text = rundown_text[:200] + '...'
 
-
-            # Construct the final summary content HTML
-            if not rundown_text and not details_html:
-                final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
-            else:
-                # "The Radar:" is added here in the HTML, so Gemini should NOT include it in its output.
-                final_summary_content = (
-                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Radar: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
-                    f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
-                    f"{details_html}"
-                )
+            final_summary_content = (
+                f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Radar: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
+                f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
+                f"{details_html}"
+            )
 
         except Exception as e:
             print(f"Error generating content for article '{article['title']}': {e}")
             traceback.print_exc()
             final_title = article['title']
-            # Fallback to original summary in case of any AI generation error
             final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
+            rundown_text = article['summary'].split('.')[0] + '.' # Ensure rundown_text is set even on error for email headline
 
         results.append({
             "title": final_title,
             "summary_content_html": final_summary_content,
             "link": article['link'],
-            "image_url": article.get("image_url", "")
+            "image_url": article.get("image_url", ""),
+            "rundown_text": rundown_text
         })
 
     return results
@@ -168,9 +244,25 @@ if __name__ == "__main__":
     try:
         raw_articles = today_items(max_items=25)
         print(f"DEBUG: Number of raw_articles fetched: {len(raw_articles)}")
-        summaries = summarise_rss(raw_articles, bullets=5)
+
+        # NEW: Deduplicate articles based on content similarity
+        # You can adjust the similarity_threshold (0.0 to 1.0) as needed.
+        # Higher threshold means stricter matching (fewer duplicates removed).
+        # Lower threshold means looser matching (more potential duplicates removed).
+        processed_articles = deduplicate_articles(raw_articles, similarity_threshold=0.7)
+        print(f"DEBUG: Number of deduplicated articles: {len(processed_articles)}")
+
+        # Pass the deduplicated articles to the summarization function
+        summaries = summarise_rss(processed_articles, bullets=5)
         print(f"DEBUG: Number of summaries generated: {len(summaries)}")
         today_str = datetime.date.today().strftime("%d %b %Y")
+
+        # Define the logo URL (using raw.githubusercontent.com as requested)
+        # Note: While this is better than 'blob' links, always test thoroughly across email clients
+        logo_url = "https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/digest.png"
+
+        # Generate the dynamic email headline
+        dynamic_email_subject = generate_email_headline(summaries, today_str)
 
         # Generate the welcome message
         welcome_message = generate_welcome_message(raw_articles) # Use raw_articles for broader context
@@ -183,7 +275,7 @@ if __name__ == "__main__":
 
         html_items = ""
         for item in summaries:
-            # Add image if available
+            # Add image if available (for individual article images, not the main logo)
             image_html = ""
             if item.get('image_url'):
                 image_html = f"<img src=\"{item['image_url']}\" alt=\"{item['title']}\" style=\"width:100%; max-width:550px; height:auto; display:block; margin:0 auto 20px; border-radius:8px; object-fit:cover;\">"
@@ -268,8 +360,8 @@ if __name__ == "__main__":
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
-                                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/digest.png"
-                                    alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
+                                <img src="{logo_url}"
+                                            alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
                         <tr>
@@ -329,7 +421,7 @@ if __name__ == "__main__":
         </html>
         """
 
-        send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
+        send_html_email(dynamic_email_subject, html_digest)
 
         print(f"✅ Sent to Gmail! Runtime: {time.time() - t0:.1f}s")
 
