@@ -274,7 +274,7 @@ if __name__ == "__main__":
                         </tr>
                         <tr>
                             <td style="text-align:center; padding:0 25px 25px;">
-                                <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF;">{today_str}</span>
+                                <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">{today_str}</span>
                             </td>
                         </tr>
                     </table>
