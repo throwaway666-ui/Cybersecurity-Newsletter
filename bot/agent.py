@@ -70,7 +70,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             "Avoid Markdowns."
             "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. "
             "Add emojis only at the beginning of the title"
-            "Finally, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways. "
+            "Finally, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways from the news article. "
             f"{cve_hint}"
             "Avoid hashtags, links, or conversational filler.\n\n"
             f"Title: {article['title']}\n"
