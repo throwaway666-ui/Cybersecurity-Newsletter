@@ -111,7 +111,8 @@ def generate_email_headline(articles: list[dict], today_str: str) -> str:
 
     context_for_headline = ""
     for article in articles[:3]: # Focus on the top 3 articles for headline relevance
-        context_for_headline += f"- {article['title']} (Radar: {article.get('rundown_text', article['summary'])})\n"
+        # Now safely fallback to 'summary' because it's guaranteed to be in the 'summaries' list
+        context_for_headline += f"- {article['title']} (Radar: {article.get('rundown_text', article.get('summary', ''))})\n"
 
     prompt = (
         "You are a cybersecurity marketing expert specializing in email newsletters. "
@@ -140,7 +141,7 @@ def generate_email_headline(articles: list[dict], today_str: str) -> str:
 def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
     """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
     if not articles:
-        return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#", "rundown_text": "No fresh cybersecurity headlines found in the last 24h."}]
+        return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#", "rundown_text": "No fresh cybersecurity headlines found in the last 24h.", "summary": "No fresh cybersecurity headlines found in the last 24h."}]
 
     genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-2.5-pro")
@@ -233,7 +234,8 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             "summary_content_html": final_summary_content,
             "link": article['link'],
             "image_url": article.get("image_url", ""),
-            "rundown_text": rundown_text
+            "rundown_text": rundown_text,
+            "summary": article['summary'] # <-- THIS WAS THE CRUCIAL ADDITION
         })
 
     return results
@@ -342,89 +344,4 @@ if __name__ == "__main__":
                         box-shadow: 0 6px 15px rgba(0,255,224,0.1) !important;
                     }}
                     .cta-button {{
-                        background-color: #00FFE0 !important;
-                        color: #121212 !important;
-                    }}
-                    h1, h2, h3 {{
-                        color: #00F5D4 !important;
-                    }}
-                    p, li, span {{
-                        color: #cccccc !important;
-                    }}
-                }}
-            </style>
-        </head>
-        <body style="margin:0; padding:0; background-color:#0d0d0d;">
-            <center style="width:100%; background-color:#0d0d0d;">
-                <div style="max-width:700px; margin:0 auto;" class="email-container">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                        <tr>
-                            <td style="text-align:center; padding:25px 25px 20px;">
-                                <img src="{logo_url}"
-                                            alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align:center; padding:0 25px 25px;">
-                                <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">{today_str}</span>
-                            </td>
-                        </tr>
-                    </table>
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0d0d0d; padding:20px 0;">
-                        <tr>
-                            <td style="padding: 0 25px;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
-                                    <tr>
-                                        <td style="padding: 25px;">
-                                            <p style='color:#E0E0E0; font-size:16px; line-height:1.7; margin-top:0; margin-bottom:25px;'>
-                                                {welcome_message}
-                                            </p>
-                                            <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
-                                                🛡️ Quick Shields
-                                            </h3>
-                                            <ul style="padding-left:25px; margin:0; color:#00F5D4; font-size:16px; line-height:1.8;">{quick_links}</ul>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 25px;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                                    <tr>
-                                        <td style="padding: 25px;">
-                                            <h3 style="color:#FFFFFF; font-size:20px; margin-bottom:25px; font-weight:bold;">📚 Today's Stories</h3>
-                                            {html_items}
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#121212; border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
-                        <tr>
-                            <td style="text-align:center; padding:25px; font-size:12px; color:#888888;">
-                                <p style="margin:0 0 10px; font-size:14px; color:#cccccc;">
-                                    Was this email forwarded to you? <a href="https://github.com/throwaway666-ui/Telegram-Research-Channel" target="_blank" style="color:#00FFE0; text-decoration:underline;">Sign up for free here</a>
-                                </p>
-                                <p style="margin:0 0 10px;">Stay secure. This digest was sent by your automated cybersecurity agent.</p>
-                                <p style="margin:0; color:#555;">&copy; {today_str[:4]} Cyber Digest Bot. All rights reserved.</p>
-                                <p style="margin-top:15px;"><a href="#" style="color:#00FFE0; text-decoration:underline; font-size:11px;">Unsubscribe</a></p>
-                            </td>
-                        </tr>
-                    </table>
-
-                </div>
-            </center>
-        </body>
-        </html>
-        """
-
-        send_html_email(dynamic_email_subject, html_digest)
-
-        print(f"✅ Sent to Gmail! Runtime: {time.time() - t0:.1f}s")
-
-    except Exception:
-        traceback.print_exc()
-        sys.exit(1)
+                        background-color: #00
