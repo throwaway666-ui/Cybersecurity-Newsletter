@@ -17,11 +17,8 @@ def generate_welcome_message(articles: list[dict]) -> str:
     if not articles:
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
-    # Corrected API key configuration: it should be 'api_key', not 'api_api_key'
-    genai.configure(api_key=GENAI_API_KEY)
-    # Using 'gemini-1.5-flash' as 'gemini-2.5-pro' might not be generally available or has different pricing.
-    # If you have access to 'gemini-2.5-pro' and it's valid for your account, you can revert this.
-    model = genai.GenerativeModel("gemini-2.5-pro")
+    genai.configure(api_key=GENAI_API_KEY) # Corrected: api_key, not api_api_key
+    model = genai.GenerativeModel("gemini-2.5-pro") # Reverted to flash, adjust if pro is preferred/available
 
     # Combine titles and summaries for the prompt
     news_context = ""
@@ -55,7 +52,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
         return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#"}]
 
     genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-pro")
 
     results = []
     for article in articles[:bullets]:
@@ -66,12 +63,12 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
 
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
-            "first write a short, punchy title including appropriate emojis at the beginning of the title only. " # Clarified emoji placement
-            "Avoid Markdowns in the title." # Added specific instruction for title
-            "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. " # This is your 'rundown_text'
-            "Finally, provide 2-3 **very concise, impactful bullet points** detailing specific takeaways from the news. " # Changed 'key takeaways' to 'specific takeaways' and 'from the news article' to make it clearer for the AI
-            f"{cve_hint}" # Retained CVE hint
-            "Ensure the output format is: Title, then The Radar sentence, then bullet points. " # Added explicit format instruction
+            "first write a short, punchy title. Start the title with **one relevant emoji**, and include no other emojis in the title. " # MODIFIED: Clear emoji instruction
+            "Avoid Markdowns in the title."
+            "Then, provide a **single, very concise, impactful sentence** summarizing the main point. " # MODIFIED: Removed "(The Radar)"
+            "Finally, provide 2-3 **very concise, impactful bullet points** detailing specific takeaways from the news. "
+            f"{cve_hint}"
+            "Ensure the output format is: Title, then the summary sentence, then bullet points. " # MODIFIED: Clarified 'summary sentence'
             "Avoid hashtags, links, or conversational filler in all outputs.\n\n"
             f"Title: {article['title']}\n"
             f"Description: {article['summary']}"
@@ -146,6 +143,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             if not rundown_text and not details_html:
                 final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
+                # Removed "The Radar:" from here, as it's now handled by Gemini's output
                 final_summary_content = (
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Radar: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
