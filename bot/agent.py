@@ -21,7 +21,7 @@ def generate_welcome_message(articles: list[dict]) -> str:
     # Using 'gemini-1.5-flash' for welcome messages (efficient for short text)
     # Reverted back to gemini-1.5-flash as previously discussed for this specific function.
     # If you changed this to 'gemini-2.5-pro' intentionally, you can revert it here.
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     # Combine titles and summaries for the prompt
     news_context = ""
@@ -57,7 +57,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
     genai.configure(api_key=GENAI_API_KEY)
     # Keeping gemini-1.5-flash for summarization, as it's generally good for this task.
     # If you want to use gemini-2.5-pro here, ensure you have access and are aware of its usage cost.
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-pro")
 
     results = []
     for article in articles[:bullets]:
