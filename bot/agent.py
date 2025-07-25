@@ -18,7 +18,7 @@ def generate_welcome_message(articles: list[dict]) -> str:
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
     genai.configure(api_api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-pro")
 
     # Combine titles and summaries for the prompt
     news_context = ""
