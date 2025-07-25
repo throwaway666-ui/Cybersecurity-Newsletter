@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup # Import BeautifulSoup is crucial
 FEEDS = [
     "https://krebsonsecurity.com/feed/",
     "https://feeds.feedburner.com/TheHackersNews",
-    "https://securityaffairs.com/feed",
+    "https://www.bleepingcomputer.com/feed/",
 ]
 
 def today_items(max_items: int = 25, hours_back: int = 42) -> List[Dict[str, str]]:
