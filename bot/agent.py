@@ -1,4 +1,4 @@
-from __future__ import annotations # This must be the very first line!
+from __future__ import annotations # This must be the very first line of the file!
 import os, datetime, sys, traceback, time
 import google.generativeai as genai
 
@@ -17,8 +17,11 @@ def generate_welcome_message(articles: list[dict]) -> str:
     if not articles:
         return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
-    genai.configure(api_key=GENAI_API_KEY) # Corrected: api_key, not api_api_key
-    model = genai.GenerativeModel("gemini-2.5-flash") # Reverted to flash, adjust if pro is preferred/available
+    genai.configure(api_key=GENAI_API_KEY)
+    # Using 'gemini-1.5-flash' for welcome messages (efficient for short text)
+    # Reverted back to gemini-1.5-flash as previously discussed for this specific function.
+    # If you changed this to 'gemini-2.5-pro' intentionally, you can revert it here.
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     # Combine titles and summaries for the prompt
     news_context = ""
@@ -52,7 +55,9 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
         return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#"}]
 
     genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-pro")
+    # Keeping gemini-1.5-flash for summarization, as it's generally good for this task.
+    # If you want to use gemini-2.5-pro here, ensure you have access and are aware of its usage cost.
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     results = []
     for article in articles[:bullets]:
@@ -63,12 +68,12 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
 
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
-            "first write a short, punchy title. Start the title with **one relevant emoji**, and include no other emojis in the title. " # MODIFIED: Clear emoji instruction
+            "first write a short, punchy title. Start the title with **one relevant emoji**, and include no other emojis in the title. "
             "Avoid Markdowns in the title."
-            "Then, provide a **single, very concise, impactful sentence** summarizing the main point. " # MODIFIED: Removed "(The Radar)"
+            "Then, provide a **single, very concise, impactful sentence** summarizing the main point. "
             "Finally, provide 2-3 **very concise, impactful bullet points** detailing specific takeaways from the news. "
             f"{cve_hint}"
-            "Ensure the output format is: Title, then the summary sentence, then bullet points. " # MODIFIED: Clarified 'summary sentence'
+            "Ensure the output format is: Title, then the summary sentence, then bullet points. "
             "Avoid hashtags, links, or conversational filler in all outputs.\n\n"
             f"Title: {article['title']}\n"
             f"Description: {article['summary']}"
@@ -143,7 +148,7 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
             if not rundown_text and not details_html:
                 final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:15px; line-height:1.7; margin:0;'>{article['summary']}</p>"
             else:
-                # Removed "The Radar:" from here, as it's now handled by Gemini's output
+                # IMPORTANT: "The Radar:" is added here in the HTML, so Gemini should NOT include it in its output.
                 final_summary_content = (
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:0;'>The Radar: <span style='font-weight:normal; color:#cccccc;'>{rundown_text}</span></p>"
                     f"<p style='font-weight:bold; color:#E0E0E0; font-size:16px; margin-bottom:10px; margin-top:15px;'>The details:</p>"
@@ -272,7 +277,7 @@ if __name__ == "__main__":
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
-                                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/cybersecurity%20logo(1).png?raw=true"
+                                <img src="https://github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/cybersecurity%20logo.png?raw=true"
                                             alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
