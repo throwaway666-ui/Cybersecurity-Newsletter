@@ -66,13 +66,13 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
 
         prompt = (
             "You are a cybersecurity editor. For the following news article, "
-            "first write a short, punchy title including appropriate emojis, "
-            "Avoid Markdowns."
-            "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. "
-            "Add emojis only at the beginning of the title"
-            "Finally, provide 2-3 **very concise, impactful bullet points** summarizing the key takeaways from the news article. "
-            f"{cve_hint}"
-            "Avoid hashtags, links, or conversational filler.\n\n"
+            "first write a short, punchy title including appropriate emojis at the beginning of the title only. " # Clarified emoji placement
+            "Avoid Markdowns in the title." # Added specific instruction for title
+            "Then, provide a **single, very concise, impactful sentence (The Radar)** summarizing the main point. " # This is your 'rundown_text'
+            "Finally, provide 2-3 **very concise, impactful bullet points** detailing specific takeaways from the news. " # Changed 'key takeaways' to 'specific takeaways' and 'from the news article' to make it clearer for the AI
+            f"{cve_hint}" # Retained CVE hint
+            "Ensure the output format is: Title, then The Radar sentence, then bullet points. " # Added explicit format instruction
+            "Avoid hashtags, links, or conversational filler in all outputs.\n\n"
             f"Title: {article['title']}\n"
             f"Description: {article['summary']}"
         )
