@@ -268,13 +268,13 @@ if __name__ == "__main__":
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="header-bg" style="background-color:#00FFE0; border-top-left-radius:16px; border-top-right-radius:16px; border:1px solid #000; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
-                                <img src="https://raw.github.com/throwaway666-ui/Telegram-Research-Channel/blob/main/assets/digest.png"
+                                <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/digest.png"
                                     alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
                         <tr>
                             <td style="text-align:center; padding:0 25px 25px;">
-                                <span style="font-family:'Arial Black', Gadget, sans-serif; font-size:16px; font-weight:bold; color:#333;">{today_str}</span>
+                                <span style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF;">{today_str}</span>
                             </td>
                         </tr>
                     </table>
