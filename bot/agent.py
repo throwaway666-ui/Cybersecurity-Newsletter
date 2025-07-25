@@ -256,7 +256,7 @@ if __name__ == "__main__":
         today_str = datetime.date.today().strftime("%d %b %Y")
 
         # Define the logo URL (using raw.githubusercontent.com as requested)
-        logo_url = "https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/digest.png"
+        logo_url = "https://raw.githubusercontent.com/throwaway666-ui/Cybersecurity-Newsletter/main/assets/digest.png"
 
         # Generate the dynamic email headline
         dynamic_email_subject = generate_email_headline(summaries, today_str)
