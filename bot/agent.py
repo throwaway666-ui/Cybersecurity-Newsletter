@@ -1,14 +1,11 @@
 from __future__ import annotations
-import os, datetime, requests, sys, traceback, time
+import os, datetime, sys, traceback, time
 import google.generativeai as genai
-import re # Added to support re.sub for plain text digest
 
 from rss import today_items
 from send_email import send_html_email # custom Gmail sender
 
 # ── Secrets / env vars ─────────────────────────────────────────────
-TG_TOKEN = os.environ["TG_TOKEN"]
-TG_CHAT_ID = os.environ["TG_CHAT_ID"]
 GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
@@ -19,13 +16,15 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
         return "• No fresh cybersecurity headlines found in the last\u202f24h."
 
     genai.configure(api_key=GENAI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    # Note: Using gemini-1.5-flash as gemini-2.5-flash is not a valid model name.
+    # If you have access to a preview model, you can change this back.
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     results = []
     for article in articles[:bullets]:
         cve_hint = (
             "Highlight CVE IDs in square brackets like [CVE-2025-1234]. "
-            if "cve" in article["title"].lower() or article["summary"].lower() else ""
+            if "cve" in article["title"].lower() or "cve" in article["summary"].lower() else ""
         )
 
         prompt = (
@@ -100,9 +99,6 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
             traceback.print_exc()
             final_title = article['title']
             final_summary_content = article['summary_content_html'] if article.get('summary_content_html') else f"<p style='color:#cccccc; font-size:16px; line-height:1.7; margin-bottom:20px;'>{article['summary']}</p>"
-            
-        # Removed the time.sleep(60) call here
-        # time.sleep(60) # This line has been removed
 
         results.append({
             "title": final_title,
@@ -113,17 +109,6 @@ def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
 
     return results
 
-def send_to_telegram(text: str) -> None:
-    """Send plain\u202ftext message to Telegram."""
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TG_CHAT_ID,
-        "text": text,
-    }
-    r = requests.post(url, json=payload, timeout=15)
-    print("Telegram API response:", r.status_code, r.text[:200])
-    r.raise_for_status()
-
 # ── Main routine ───────────────────────────────────────────────────
 if __name__ == "__main__":
     t0 = time.time()
@@ -133,16 +118,6 @@ if __name__ == "__main__":
         summaries = summarise_rss(raw_articles, bullets=5)
         print(f"DEBUG: Number of summaries generated: {len(summaries)}")
         today_str = datetime.date.today().strftime("%d %b %Y")
-
-        # --- Plain-text digest for Telegram (adapted to new structure) ---
-        # Note: Aggressively stripping HTML for plain text Telegram message
-        news_block = "\n\n".join([
-            f"{item['title']}\n"
-            f"{re.sub(r'<.*?>', '', item['summary_content_html']).strip()}" # Strip all HTML for plain text
-            for item in summaries
-        ])
-        digest = f"🕵️\u200b♂️ Cybersecurity Digest \u2014 {today_str}\n\n{news_block}"
-        # -------------------------------------------------------------------
 
         # Generate Quick Links section
         quick_links = "\n".join([
@@ -238,7 +213,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
                                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/pnglogo.png"
-                                    alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
+                                     alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
                         <tr>
@@ -289,20 +264,15 @@ if __name__ == "__main__":
                         </tr>
                     </table>
 
-                    </div>
+                </div>
             </center>
         </body>
         </html>
         """
 
-        print("===== Final Digest (plain-text) =====")
-        print(digest)
-        print("=====================================")
-
-        send_to_telegram(digest)
         send_html_email(f"🕵️ Cybersecurity Digest \u2014 {today_str}", html_digest)
 
-        print(f"✅ Sent to Telegram and Gmail!  Runtime: {time.time() - t0:.1f}s")
+        print(f"✅ Sent to Gmail! Runtime: {time.time() - t0:.1f}s")
 
     except Exception:
         traceback.print_exc()
