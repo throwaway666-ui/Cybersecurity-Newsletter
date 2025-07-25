@@ -10,14 +10,48 @@ GENAI_API_KEY = os.environ["GENAI_API_KEY"]
 # GMAIL secrets are handled inside email.py via env vars
 # ───────────────────────────────────────────────────────────────────
 
-def summarise_rss(articles: list[dict], bullets: int = 5) -> str:
-    """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
+def generate_welcome_message(articles: list[dict]) -> str:
+    """
+    Use Gemini to generate a short, engaging welcome message based on the day's cybersecurity news.
+    """
     if not articles:
-        return "• No fresh cybersecurity headlines found in the last\u202f24h."
+        return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
 
     genai.configure(api_key=GENAI_API_KEY)
-    # Note: Using gemini-1.5-flash as gemini-2.5-flash is not a valid model name.
-    # If you have access to a preview model, you can change this back.
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+    # Combine titles and summaries for the prompt
+    news_context = ""
+    for article in articles[:5]: # Use top 5 articles for context
+        news_context += f"Title: {article['title']}\nSummary: {article['summary']}\n\n"
+
+    prompt = (
+        "You are a friendly and insightful cybersecurity newsletter editor. "
+        "Based on the following cybersecurity news articles, write a **very short (2-3 sentences)**, "
+        "engaging, and thought-provoking welcome paragraph for a daily cybersecurity digest. "
+        "It should introduce the themes of today's news without being a summary itself. "
+        "Use appropriate emojis. Avoid Markdown formatting for the welcome message.\n\n"
+        "Here are today's headlines and summaries:\n"
+        f"{news_context}"
+        "Welcome message:"
+    )
+
+    try:
+        response = model.generate_content(prompt)
+        welcome_text = response.text.strip()
+        return welcome_text if welcome_text else "Welcome to today's Cybersecurity Digest! Stay informed and protected."
+    except Exception as e:
+        print(f"Error generating welcome message: {e}")
+        traceback.print_exc()
+        return "Welcome to today's Cybersecurity Digest! Stay informed and protected."
+
+
+def summarise_rss(articles: list[dict], bullets: int = 5) -> list[dict]:
+    """Use Gemini to generate custom titles and bullet-point summaries from article title + summary."""
+    if not articles:
+        return [{"title": "No fresh cybersecurity headlines found", "summary_content_html": "<p>• No fresh cybersecurity headlines found in the last\u202f24h.</p>", "link": "#"}]
+
+    genai.configure(api_key=GENAI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     results = []
@@ -119,6 +153,9 @@ if __name__ == "__main__":
         print(f"DEBUG: Number of summaries generated: {len(summaries)}")
         today_str = datetime.date.today().strftime("%d %b %Y")
 
+        # Generate the welcome message
+        welcome_message = generate_welcome_message(raw_articles) # Use raw_articles for broader context
+
         # Generate Quick Links section
         quick_links = "\n".join([
             f"<li><a href=\"{item['link']}\" style=\"color:#00F5D4; text-decoration:none;\">{item['title']}</a></li>"
@@ -213,7 +250,7 @@ if __name__ == "__main__":
                         <tr>
                             <td style="text-align:center; padding:25px 25px 20px;">
                                 <img src="https://raw.githubusercontent.com/throwaway666-ui/Telegram-Research-Channel/main/assets/pnglogo.png"
-                                     alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
+                                            alt="Cybersecurity Digest Logo" style="width:100%; max-width:250px; height:auto; display:block; margin:0 auto;" />
                             </td>
                         </tr>
                         <tr>
@@ -228,6 +265,9 @@ if __name__ == "__main__":
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="content-block" style="background-color:#121212; border-radius:12px; border:1px solid #333333; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px;">
                                     <tr>
                                         <td style="padding: 25px;">
+                                            <p style='color:#E0E0E0; font-size:16px; line-height:1.7; margin-top:0; margin-bottom:25px;'>
+                                                {welcome_message}
+                                            </p>
                                             <h3 style="color:#00FFE0; border-left:4px solid #00FFE0; padding-left:15px; font-size:18px; font-weight:bold; margin-top:0; margin-bottom:25px;">
                                                 🛡️ Quick Shields
                                             </h3>
@@ -270,7 +310,7 @@ if __name__ == "__main__":
         </html>
         """
 
-        send_html_email(f"🕵️ Cybersecurity Digest \u2014 {today_str}", html_digest)
+        send_html_email(f"🕵️ Cybersecurity Digest — {today_str}", html_digest)
 
         print(f"✅ Sent to Gmail! Runtime: {time.time() - t0:.1f}s")
 
